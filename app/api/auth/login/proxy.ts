@@ -1,0 +1,39 @@
+import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+
+export function proxy(request: NextRequest) {
+  const session = request.cookies.get("session")
+  const { pathname } = request.nextUrl
+
+  // Public routes
+  if (pathname === "/" || pathname === "/login") {
+    // If already logged in, redirect to dashboard
+    if (session) {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+    return NextResponse.next()
+  }
+
+  // Protected routes - require authentication
+  if (pathname.startsWith("/dashboard")) {
+    if (!session) {
+      return NextResponse.redirect(new URL("/", request.url))
+    }
+    return NextResponse.next()
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
+  ],
+}
