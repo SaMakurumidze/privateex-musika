@@ -124,3 +124,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Keep the global footer aligned to dashboard content area (right of sidebar). */
+@media (min-width: 1024px) {
+  body:has([data-dashboard-shell="true"]) .site-footer {
+    margin-left: 18rem;
+  }
+}
