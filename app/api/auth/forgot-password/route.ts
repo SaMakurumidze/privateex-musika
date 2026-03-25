@@ -1,19 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
+import { assertEmail } from "@/lib/input-safety"
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json()
+    const { email: rawEmail } = await request.json()
+    const email = assertEmail(rawEmail)
 
     // Validation
     if (!email) {
       return NextResponse.json({ error: "Please enter your email address" }, { status: 400 })
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ error: "Please enter a valid email address" }, { status: 400 })
     }
 
     // Check if email exists
@@ -33,6 +29,8 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error("[v0] Forgot password error:", error)
-    return NextResponse.json({ error: "An error occurred. Please try again." }, { status: 500 })
+    const message = error instanceof Error ? error.message : "An error occurred. Please try again."
+    const status = message.startsWith("Invalid") ? 400 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }

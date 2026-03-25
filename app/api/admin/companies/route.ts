@@ -1,14 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requirePermission } from "@/lib/admin-auth"
 import { createSQLClient } from "@/lib/db"
+import { asTrimmedString, assertPositiveNumber } from "@/lib/input-safety"
 
 export async function POST(request: NextRequest) {
   try {
     await requirePermission("companies:create")
     
     const body = await request.json()
-    const { 
-      company_name, 
+    const {
+      company_name: rawCompanyName,
       price_per_share, 
       total_shares, 
       logo_url, 
@@ -19,10 +20,13 @@ export async function POST(request: NextRequest) {
       return_rate,
       company_info_url
     } = body
+    const company_name = asTrimmedString(rawCompanyName)
 
     if (!company_name || !price_per_share || !total_shares) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
+    const pricePerShare = assertPositiveNumber(price_per_share, "price per share")
+    const totalShares = assertPositiveNumber(total_shares, "total shares")
 
     const sql = createSQLClient()
     
@@ -48,9 +52,9 @@ export async function POST(request: NextRequest) {
       ) VALUES (
         ${companyId},
         ${company_name},
-        ${Number(price_per_share)},
-        ${Number(total_shares)},
-        ${Number(total_shares)},
+        ${pricePerShare},
+        ${totalShares},
+        ${totalShares},
         ${logo_url || null},
         ${sector || null},
         ${description || null},
@@ -66,7 +70,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, companyId })
   } catch (error) {
     const message = error instanceof Error ? error.message : "An error occurred"
-    const status = message.includes("Unauthorized") ? 401 : message.includes("Forbidden") ? 403 : 500
+    const status = message.includes("Unauthorized")
+      ? 401
+      : message.includes("Forbidden")
+      ? 403
+      : message.startsWith("Invalid")
+      ? 400
+      : 500
     return NextResponse.json({ error: message }, { status })
   }
 }

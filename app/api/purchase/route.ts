@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { createSQLClient } from "@/lib/db"
+import { assertCompanyId, assertPositiveNumber } from "@/lib/input-safety"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,14 +12,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { companyId, companyName, shares, pricePerShare } = body
+    const { companyId: rawCompanyId, shares, pricePerShare } = body
+    const companyId = assertCompanyId(rawCompanyId)
 
     if (!companyId || !shares || shares < 1 || !pricePerShare) {
       return NextResponse.json({ error: "Invalid purchase data" }, { status: 400 })
     }
 
-    const numShares = Number(shares)
-    const numPrice = Number(pricePerShare)
+    const numShares = assertPositiveNumber(shares, "share quantity")
+    const numPrice = assertPositiveNumber(pricePerShare, "price per share")
     const totalAmount = numShares * numPrice
 
     const sql = createSQLClient()
@@ -72,7 +74,7 @@ export async function POST(request: NextRequest) {
         user_id, transaction_id, company_name, company_id,
         shares_purchased, price_per_share, payment_method, status
       ) VALUES (
-        ${session.id}, ${transactionId}, ${companyName}, ${companyId},
+        ${session.id}, ${transactionId}, ${company.company_name}, ${companyId},
         ${numShares}, ${numPrice}, 'Wallet', 'completed'
       )
       RETURNING id
@@ -102,7 +104,7 @@ export async function POST(request: NextRequest) {
       ) VALUES (
         ${certNumber}, ${transactionId},
         ${session.id}, ${investor?.full_name || 'Investor'}, ${investor?.id_passport || ''},
-        ${companyId}, ${company.company_name || companyName}, ${company.registration_number || ''}, ${company.country_of_incorporation || ''},
+        ${companyId}, ${company.company_name}, ${company.registration_number || ''}, ${company.country_of_incorporation || ''},
         ${company.share_class || 'Ordinary'}, ${numShares}, ${numPrice}, ${totalAmount}
       )
     `
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest) {
     console.error("Purchase error:", error)
     const errorMessage =
       error instanceof Error ? error.message : "An error occurred during purchase"
-    return NextResponse.json({ error: errorMessage }, { status: 500 })
+    const status = errorMessage.startsWith("Invalid") ? 400 : 500
+    return NextResponse.json({ error: errorMessage }, { status })
   }
 }

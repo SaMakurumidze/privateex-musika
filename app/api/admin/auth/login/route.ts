@@ -1,9 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { verifyAdminCredentials, createAdminSession } from "@/lib/admin-auth"
+import { assertEmail, asTrimmedString } from "@/lib/input-safety"
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    const { email: rawEmail, password: rawPassword } = await request.json()
+    const email = assertEmail(rawEmail)
+    const password = asTrimmedString(rawPassword)
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 })
@@ -29,6 +32,8 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Admin login error:", error)
-    return NextResponse.json({ error: "An error occurred during login" }, { status: 500 })
+    const message = error instanceof Error ? error.message : "An error occurred during login"
+    const status = message.startsWith("Invalid") ? 400 : 500
+    return NextResponse.json({ error: message }, { status })
   }
 }
