@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Shield, Globe, LineChart, ArrowLeft } from "lucide-react"
 
@@ -24,6 +25,7 @@ export default function HomePage() {
   const [phone, setPhone] = useState("")
   const [country, setCountry] = useState("")
   const [address, setAddress] = useState("")
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
   const [profilePicture, setProfilePicture] = useState<File | null>(null)
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null)
   const [uploadingImage, setUploadingImage] = useState(false)
@@ -47,6 +49,7 @@ export default function HomePage() {
     setPhone("")
     setCountry("")
     setAddress("")
+    setAgreedToTerms(false)
     setProfilePicture(null)
     setProfilePicturePreview(null)
     setForgotEmail("")
@@ -140,6 +143,11 @@ export default function HomePage() {
     
     // Prevent multiple submissions
     if (loading) return
+
+    if (!agreedToTerms) {
+      setError("You must agree to the Terms and Conditions before creating an account.")
+      return
+    }
     
     setError("")
     setSuccess("")
@@ -213,6 +221,7 @@ export default function HomePage() {
       setPhone("")
       setCountry("")
       setAddress("")
+      setAgreedToTerms(false)
       setProfilePicture(null)
       setProfilePicturePreview(null)
       
@@ -795,9 +804,32 @@ export default function HomePage() {
                     <p className="text-xs text-slate-400">Default role for new registrations</p>
                   </div>
 
+                  <label className="flex items-start gap-3 rounded-lg border border-white/15 bg-white/5 p-3 text-sm text-slate-200">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-white/30 bg-transparent text-indigo-500 focus:ring-indigo-400"
+                      required
+                    />
+                    <span>
+                      I have read and agree to the{" "}
+                      <Link
+                        href="/terms-and-conditions"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-indigo-300 underline hover:text-indigo-200"
+                      >
+                        Terms and Conditions
+                      </Link>
+                      , and I understand that PrivateEx.Global is a demonstration platform with no
+                      real financial or legal investment functionality.
+                    </span>
+                  </label>
+
                   <button
                     type="submit"
-                    disabled={loading || uploadingImage}
+                    disabled={loading || uploadingImage || !agreedToTerms}
                     className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/50 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
                     {uploadingImage ? "Uploading image..." : loading ? "Creating account..." : "Create Account"}
