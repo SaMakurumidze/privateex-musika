@@ -273,7 +273,7 @@ export default function HomePage() {
               </h1>
             </div>
             <p className="text-xl font-semibold text-slate-300">Pre-IPO Investment Platform</p>
-            <p className="text-2xl font-light text-slate-200 text-balance">
+            <p className="text-lg font-light text-slate-200 text-balance">
               Invest in tomorrow&apos;s public companies today
             </p>
           </div>

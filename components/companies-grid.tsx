@@ -26,6 +26,59 @@ interface CompaniesGridProps {
   companies: Company[]
 }
 
+const logoGradients = [
+  "from-indigo-500 to-violet-600",
+  "from-emerald-500 to-teal-600",
+  "from-sky-500 to-cyan-600",
+  "from-rose-500 to-pink-600",
+  "from-amber-500 to-orange-600",
+  "from-fuchsia-500 to-purple-600",
+]
+
+const logoGradientColors: [string, string][] = [
+  ["#6366F1", "#7C3AED"],
+  ["#10B981", "#0D9488"],
+  ["#0EA5E9", "#0891B2"],
+  ["#F43F5E", "#EC4899"],
+  ["#F59E0B", "#EA580C"],
+  ["#D946EF", "#9333EA"],
+]
+
+function getCompanyInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("")
+}
+
+function getGradientByCompany(company: Company) {
+  const seed = Number(company.id) || company.company_name.length
+  return logoGradients[seed % logoGradients.length]
+}
+
+function getLogoColorsByCompany(company: Company) {
+  const seed = Number(company.id) || company.company_name.length
+  return logoGradientColors[seed % logoGradientColors.length]
+}
+
+function makeFallbackLogoDataUri(company: Company, initials: string) {
+  const [fromColor, toColor] = getLogoColorsByCompany(company)
+  const safeInitials = (initials || "CO").slice(0, 2)
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'>
+  <defs>
+    <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+      <stop offset='0%' stop-color='${fromColor}'/>
+      <stop offset='100%' stop-color='${toColor}'/>
+    </linearGradient>
+  </defs>
+  <rect width='96' height='96' rx='18' fill='url(#g)'/>
+  <text x='50%' y='53%' text-anchor='middle' dominant-baseline='middle' font-family='Arial, sans-serif' font-size='36' font-weight='700' fill='white'>${safeInitials}</text>
+</svg>`
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+}
+
 export function CompaniesGrid({ companies }: CompaniesGridProps) {
   if (companies.length === 0) {
     return (
@@ -48,23 +101,27 @@ export function CompaniesGrid({ companies }: CompaniesGridProps) {
 
 function CompanyCard({ company }: { company: Company }) {
   const pricePerShare = Number.parseFloat(company.price_per_share)
-  const [imgError, setImgError] = useState(false)
+  const initials = getCompanyInitials(company.company_name)
+  const gradient = getGradientByCompany(company)
+  const generatedLogo = makeFallbackLogoDataUri(company, initials)
+  const [logoSrc, setLogoSrc] = useState(company.logo_url || generatedLogo)
 
   return (
     <div className="group relative overflow-hidden rounded-2xl bg-card/50 backdrop-blur-xl border border-border p-6 transition-all duration-200 hover:scale-105 hover:shadow-2xl hover:border-primary/30">
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary to-secondary opacity-0 group-hover:opacity-100 transition-opacity" />
 
       <div className="flex items-start gap-4 mb-4">
-        <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 overflow-hidden">
-          {company.logo_url && !imgError ? (
-            <img
-              src={company.logo_url}
-              alt={`${company.company_name} logo`}
-              className="h-8 w-8 object-contain"
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <Building2 className="h-8 w-8 text-primary" />
+        <div className={`relative h-14 w-14 rounded-xl border border-white/20 bg-gradient-to-br ${gradient} p-1 shadow-md`}>
+          <img
+            src={logoSrc}
+            alt={`${company.company_name} logo`}
+            className="h-full w-full rounded-lg bg-white/95 object-cover"
+            onError={() => setLogoSrc(generatedLogo)}
+          />
+          {!company.logo_url && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/0">
+              <Building2 className="h-0 w-0" />
+            </div>
           )}
         </div>
         <div className="flex-1">
