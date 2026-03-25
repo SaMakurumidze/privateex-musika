@@ -1,18 +1,28 @@
 import { neon, NeonQueryFunction } from "@neondatabase/serverless"
 
-// Create SQL client - neon() returns a tagged template function
-export const sql = neon(process.env.DATABASE_URL!)
+/**
+ * Lazily resolve a SQL client.
+ * Avoids evaluating `neon()` at module import time, which can break Vercel builds
+ * when `DATABASE_URL` is only available at runtime.
+ */
+function getSQLClient(): NeonQueryFunction<false, false> {
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL environment variable is not set")
+  }
+  return neon(databaseUrl)
+}
+
+// Backward-compatible tagged template helper used throughout routes/pages.
+export const sql: NeonQueryFunction<false, false> = ((...args: Parameters<NeonQueryFunction<false, false>>) =>
+  getSQLClient()(...args)) as NeonQueryFunction<false, false>
 
 /**
  * Creates a fresh SQL client for each request
  * This ensures environment variables are properly loaded at runtime on Vercel
  */
 export function createSQLClient() {
-  const databaseUrl = process.env.DATABASE_URL
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL environment variable is not set")
-  }
-  return neon(databaseUrl)
+  return getSQLClient()
 }
 
 /**
