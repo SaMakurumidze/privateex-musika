@@ -1,6 +1,7 @@
 import { cookies } from "next/headers"
 import { createSQLClient } from "./db"
 import bcrypt from "bcryptjs"
+import crypto from "crypto"
 
 export type AdminRole = "admin" | "Associate" | "Junior Consultant" | "Senior Consultant"
 
@@ -170,7 +171,7 @@ export async function verifyAdminCredentials(email: string, password: string): P
   try {
     const sql = createSQLClient()
     const users = await sql`
-      SELECT * FROM users WHERE LOWER(email) = LOWER(${email})
+      SELECT * FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(${email}))
     `
 
     if (users.length === 0) {
@@ -178,10 +179,35 @@ export async function verifyAdminCredentials(email: string, password: string): P
     }
 
     const user = users[0]
-    const passwordMatch = await bcrypt.compare(password, user.password)
+    const storedPassword = String(user.password || "")
+    const normalizedHash = storedPassword.replace(/^\$2y\$/, "$2a$")
+    let passwordMatch = false
+    let shouldRehash = false
+
+    if (/^\$2[aby]\$/.test(normalizedHash)) {
+      passwordMatch = await bcrypt.compare(password, normalizedHash)
+    } else if (storedPassword === password) {
+      passwordMatch = true
+      shouldRehash = true
+    } else if (/^[a-f0-9]{32}$/i.test(storedPassword)) {
+      const md5 = crypto.createHash("md5").update(password).digest("hex")
+      if (md5.toLowerCase() === storedPassword.toLowerCase()) {
+        passwordMatch = true
+        shouldRehash = true
+      }
+    }
 
     if (!passwordMatch) {
       return null
+    }
+
+    if (shouldRehash) {
+      const upgradedHash = await bcrypt.hash(password, 10)
+      await sql`
+        UPDATE users
+        SET password = ${upgradedHash}
+        WHERE id = ${user.id}
+      `
     }
 
     const normalizedRole = normalizeRole(user.role)
