@@ -11,7 +11,6 @@ export async function GET(
 ) {
   try {
     const session = await getSession()
-
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -45,25 +44,19 @@ export async function GET(
       issuedAt: cert.issue_date,
     })
 
-    // ✅ Correct handling of Uint8Array → ArrayBuffer
-    const arrayBuffer = pdfBuffer.buffer.slice(
-      pdfBuffer.byteOffset,
-      pdfBuffer.byteOffset + pdfBuffer.byteLength
-    )
+    // Convert to Uint8Array for Next.js 16 BodyInit compatibility
+    const buffer = new Uint8Array(pdfBuffer)
 
-    return new NextResponse(arrayBuffer, {
+    return new NextResponse(buffer, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${certificateNumber}.pdf"`,
-        "Content-Length": String(pdfBuffer.byteLength),
+        "Content-Length": String(buffer.length),
       },
     })
   } catch (error) {
     console.error("Certificate download error:", error)
-    return NextResponse.json(
-      { error: "Failed to generate certificate" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to generate certificate" }, { status: 500 })
   }
 }

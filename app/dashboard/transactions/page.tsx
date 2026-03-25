@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth"
 import { sql } from "@/lib/db"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { TransactionSummary } from "@/components/transaction-summary"
-import { TransactionsTable } from "@/components/transactions-table"
+import { TransactionsTable, type Transaction } from "@/components/transactions-table"
 
 export const dynamic = "force-dynamic"
 
@@ -49,7 +49,7 @@ export default async function TransactionsPage() {
           avgInvestment={avgInvestment}
         />
 
-        <TransactionsTable transactions={transactions} />
+        <TransactionsTable transactions={transactions as Transaction[]} />
       </div>
     </DashboardLayout>
   )

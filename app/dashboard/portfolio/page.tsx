@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth"
 import { sql } from "@/lib/db"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { PortfolioSummary } from "@/components/portfolio-summary"
-import { HoldingsGrid } from "@/components/holdings-grid"
+import { HoldingsGrid, type Holding } from "@/components/holdings-grid"
 
 export const dynamic = "force-dynamic"
 
@@ -45,7 +45,7 @@ export default async function PortfolioPage() {
 
         <PortfolioSummary totalValue={totalValue} totalCompanies={totalCompanies} totalShares={totalShares} />
 
-        <HoldingsGrid holdings={holdings} />
+        <HoldingsGrid holdings={holdings as Holding[]} />
       </div>
     </DashboardLayout>
   )

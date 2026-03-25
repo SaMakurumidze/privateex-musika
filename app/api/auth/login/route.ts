@@ -41,18 +41,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify credentials against database
-    let investor
-    try {
-      investor = await verifyCredentials(email, password)
-    } catch (error) {
-      if ((error as Error & { code?: string }).code === "EMAIL_NOT_VERIFIED") {
-        return NextResponse.json({ 
-          error: "Please verify your email address before logging in. Check your inbox for the verification link.",
-          code: "EMAIL_NOT_VERIFIED"
-        }, { status: 403 })
-      }
-      throw error
-    }
+    const investor = await verifyCredentials(email, password)
 
     if (!investor) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })

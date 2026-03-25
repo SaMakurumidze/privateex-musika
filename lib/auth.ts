@@ -59,13 +59,6 @@ export async function verifyCredentials(email: string, password: string) {
       return null
     }
 
-    // Check if email is verified
-    if (investor.email_verified === false) {
-      const error = new Error("EMAIL_NOT_VERIFIED")
-      ;(error as Error & { code: string }).code = "EMAIL_NOT_VERIFIED"
-      throw error
-    }
-
     return {
       id: investor.id,
       full_name: investor.full_name,
@@ -76,10 +69,6 @@ export async function verifyCredentials(email: string, password: string) {
       country: investor.country,
     }
   } catch (error) {
-    // Re-throw email verification error
-    if ((error as Error & { code?: string }).code === "EMAIL_NOT_VERIFIED") {
-      throw error
-    }
     console.error("Verify credentials error:", error)
     return null
   }

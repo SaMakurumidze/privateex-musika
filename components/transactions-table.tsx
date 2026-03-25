@@ -3,7 +3,7 @@ import { History, PlusCircle, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-interface Transaction {
+export interface Transaction {
   transaction_id: string
   company_name: string
   company_id: string

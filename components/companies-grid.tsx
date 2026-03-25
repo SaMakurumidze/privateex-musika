@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Building2, ExternalLink, TrendingUp } from "lucide-react"
 import { InvestButton } from "./invest-button"
 
-interface Company {
+export interface Company {
   id: number
   company_id: string
   company_name: string

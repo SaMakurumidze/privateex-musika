@@ -1,8 +1,8 @@
 import Link from "next/link"
 import { Building2, PlusCircle } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Button } from "./ui/button"
 
-interface Holding {
+export interface Holding {
   company_id: string
   company_name: string
   total_shares: number

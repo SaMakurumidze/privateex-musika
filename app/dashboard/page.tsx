@@ -3,7 +3,7 @@ import { getSession } from "@/lib/auth"
 import { createSQLClient } from "@/lib/db"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { StatsCards } from "@/components/stats-cards"
-import { CompaniesGrid } from "@/components/companies-grid"
+import { CompaniesGrid, type Company } from "@/components/companies-grid"
 
 export const dynamic = "force-dynamic"
 
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
           totalShares={Number(summary.total_shares)}
         />
 
-        <CompaniesGrid companies={companies} />
+        <CompaniesGrid companies={companies as Company[]} />
       </div>
     </DashboardLayout>
   )

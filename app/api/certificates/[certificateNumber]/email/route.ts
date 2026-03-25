@@ -47,7 +47,8 @@ export async function POST(
 
     // Store the PDF in Vercel Blob for email link
     const { put } = await import("@vercel/blob")
-    const blob = await put(`certificates/${certificateNumber}.pdf`, pdfBuffer, {
+    const buffer = Buffer.from(pdfBuffer)
+    const blob = await put(`certificates/${certificateNumber}.pdf`, buffer, {
       access: "public",
       contentType: "application/pdf",
     })
