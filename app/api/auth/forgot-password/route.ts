@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
     // Check if email exists
     const users = await sql`
-      SELECT id, full_name FROM investors WHERE email = ${email}
+      SELECT id, full_name FROM investors WHERE LOWER(email) = LOWER(${email})
     `
 
     // Return generic response even for unknown addresses to avoid account enumeration.

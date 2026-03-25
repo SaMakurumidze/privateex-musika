@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
 
     const {
       full_name,
-      email,
+      email: rawEmail,
       password,
       confirm_password,
       id_passport,
@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
       address,
       profile_picture_url,
     } = body
+    const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : ""
 
     // Required field validation
     if (!full_name || !email || !password || !confirm_password || !id_passport || !phone || !country) {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Check if email already exists
     const existingEmail = await sql`
-      SELECT id FROM investors WHERE email = ${email}
+      SELECT id FROM investors WHERE LOWER(email) = LOWER(${email})
     `
 
     if (existingEmail.length > 0) {

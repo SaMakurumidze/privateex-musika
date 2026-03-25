@@ -43,7 +43,7 @@ export async function verifyCredentials(email: string, password: string) {
   try {
     const sql = createSQLClient()
     const investors = await sql`
-      SELECT * FROM investors WHERE email = ${email}
+      SELECT * FROM investors WHERE LOWER(email) = LOWER(${email})
     `
 
     if (investors.length === 0) {

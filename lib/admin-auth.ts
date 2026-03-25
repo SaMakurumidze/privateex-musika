@@ -170,7 +170,7 @@ export async function verifyAdminCredentials(email: string, password: string): P
   try {
     const sql = createSQLClient()
     const users = await sql`
-      SELECT * FROM users WHERE email = ${email}
+      SELECT * FROM users WHERE LOWER(email) = LOWER(${email})
     `
 
     if (users.length === 0) {
