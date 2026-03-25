@@ -33,6 +33,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Admin login error:", error)
     const message = error instanceof Error ? error.message : "An error occurred during login"
+    if (message === "AUTH_DB_ERROR") {
+      return NextResponse.json(
+        { error: "Authentication service is unavailable. Please contact support." },
+        { status: 500 },
+      )
+    }
     const status = message.startsWith("Invalid") ? 400 : 500
     return NextResponse.json({ error: message }, { status })
   }

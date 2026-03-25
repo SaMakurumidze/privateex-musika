@@ -1,5 +1,22 @@
 import { neon, NeonQueryFunction } from "@neondatabase/serverless"
 
+export function getDatabaseTargetInfo() {
+  const databaseUrl = process.env.DATABASE_URL
+  if (!databaseUrl) {
+    return { configured: false, host: "unset", database: "unset" }
+  }
+  try {
+    const parsed = new URL(databaseUrl)
+    return {
+      configured: true,
+      host: parsed.hostname || "unknown",
+      database: parsed.pathname?.replace("/", "") || "unknown",
+    }
+  } catch {
+    return { configured: true, host: "invalid-url", database: "invalid-url" }
+  }
+}
+
 /**
  * Lazily resolve a SQL client.
  * Avoids evaluating `neon()` at module import time, which can break Vercel builds

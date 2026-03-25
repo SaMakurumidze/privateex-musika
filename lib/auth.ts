@@ -1,5 +1,5 @@
 import { cookies } from "next/headers"
-import { createSQLClient } from "./db"
+import { createSQLClient, getDatabaseTargetInfo } from "./db"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
 
@@ -96,8 +96,11 @@ export async function verifyCredentials(email: string, password: string) {
       country: investor.country,
     }
   } catch (error) {
-    console.error("Verify credentials error:", error)
-    return null
+    console.error("Verify credentials DB/auth error:", {
+      error,
+      dbTarget: getDatabaseTargetInfo(),
+    })
+    throw new Error("AUTH_DB_ERROR")
   }
 }
 

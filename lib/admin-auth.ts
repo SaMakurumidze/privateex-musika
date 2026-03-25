@@ -1,5 +1,5 @@
 import { cookies } from "next/headers"
-import { createSQLClient } from "./db"
+import { createSQLClient, getDatabaseTargetInfo } from "./db"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
 
@@ -220,8 +220,11 @@ export async function verifyAdminCredentials(email: string, password: string): P
       created_at: user.created_at,
     }
   } catch (error) {
-    console.error("Admin verify credentials error:", error)
-    return null
+    console.error("Admin verify credentials DB/auth error:", {
+      error,
+      dbTarget: getDatabaseTargetInfo(),
+    })
+    throw new Error("AUTH_DB_ERROR")
   }
 }
 
