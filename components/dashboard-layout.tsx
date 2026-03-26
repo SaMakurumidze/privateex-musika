@@ -43,10 +43,16 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             >
               <Menu className="h-5 w-5" />
             </button>
-            <Shield className="h-8 w-8 text-primary" />
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              PrivateEx. Global
-            </span>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-3 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Go to dashboard"
+            >
+              <Shield className="h-8 w-8 text-primary" />
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                PrivateEx. Global
+              </span>
+            </Link>
             <span className="text-sm text-muted-foreground hidden md:inline">Pre-IPO Marketplace</span>
           </div>
 
