@@ -19,7 +19,7 @@ export default async function AdminDashboardLayout({
   const permissions = getPermissions(admin.role)
 
   return (
-    <div className="min-h-screen bg-background">
+    <div data-admin-shell="true" className="min-h-screen bg-background">
       <AdminForceDarkTheme />
       <InactivityLogout logoutEndpoint="/api/admin/auth/logout" redirectTo="/admin" />
       <AdminSidebar

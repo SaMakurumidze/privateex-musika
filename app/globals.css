@@ -130,4 +130,8 @@
   body:has([data-dashboard-shell="true"]) .site-footer {
     margin-left: 18rem;
   }
+
+  body:has([data-admin-shell="true"]) .site-footer {
+    margin-left: 16rem;
+  }
 }
