@@ -66,8 +66,8 @@ export async function GET(request: NextRequest) {
         AND (${company} = '' OR p.company_id ILIKE ${"%" + company + "%"} OR p.company_name ILIKE ${"%" + company + "%"})
         AND (${investor} = '' OR i.full_name ILIKE ${"%" + investor + "%"} OR i.email ILIKE ${"%" + investor + "%"})
         AND (${status} = '' OR LOWER(p.status) = ${status})
-        AND (${startDate} = '' OR p.purchase_date::date >= CAST(${startDate} AS DATE))
-        AND (${endDate} = '' OR p.purchase_date::date <= CAST(${endDate} AS DATE))
+        AND p.purchase_date::date >= COALESCE(NULLIF(${startDate}, '')::date, p.purchase_date::date)
+        AND p.purchase_date::date <= COALESCE(NULLIF(${endDate}, '')::date, p.purchase_date::date)
       ORDER BY p.purchase_date DESC
       LIMIT 5000
     `) as ExportRow[]
