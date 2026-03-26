@@ -6,6 +6,7 @@ import Link from "next/link"
 import { Shield, Globe, LineChart, ArrowLeft } from "lucide-react"
 
 type ViewType = "login" | "register" | "forgot-password"
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
 
 export default function HomePage() {
   const [view, setView] = useState<ViewType>("login")
@@ -144,6 +145,13 @@ export default function HomePage() {
 
     if (!agreedToTerms) {
       setError("You must agree to the Terms and Conditions before creating an account.")
+      return
+    }
+
+    if (registerPassword.length < 8 || !STRONG_PASSWORD_REGEX.test(registerPassword)) {
+      setError(
+        "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.",
+      )
       return
     }
     
@@ -492,7 +500,10 @@ export default function HomePage() {
                         type="password"
                         value={registerPassword}
                         onChange={(e) => setRegisterPassword(e.target.value)}
-                        placeholder="Min 6 characters"
+                        placeholder="Min 8, Aa1@ required"
+                        minLength={8}
+                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,}"
+                        title="Use at least 8 characters with uppercase, lowercase, number, and special character."
                         required
                         className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                       />
@@ -513,6 +524,9 @@ export default function HomePage() {
                       />
                     </div>
                   </div>
+                  <p className="text-xs text-slate-400">
+                    Password must include uppercase, lowercase, number, special character, and be at least 8 characters.
+                  </p>
 
                   <div className="space-y-2">
                     <label htmlFor="idPassport" className="text-sm font-medium text-white">

@@ -3,6 +3,8 @@ import { createSQLClient } from "@/lib/db"
 import bcrypt from "bcryptjs"
 import crypto from "crypto"
 
+const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -52,8 +54,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Password length validation
-    if (password.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters long" }, { status: 400 })
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Password must be at least 8 characters long" }, { status: 400 })
+    }
+
+    if (!STRONG_PASSWORD_REGEX.test(password)) {
+      return NextResponse.json(
+        {
+          error:
+            "Password must include at least one uppercase letter, one lowercase letter, one number, and one special character.",
+        },
+        { status: 400 },
+      )
     }
 
     // Password match validation
