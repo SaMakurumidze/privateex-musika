@@ -1,20 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTheme } from "next-themes"
 
 type Props = {
+  userId: number
   initialPhone: string
   initialAddress: string
 }
 
-export function DashboardSettingsForm({ initialPhone, initialAddress }: Props) {
+export function DashboardSettingsForm({ userId, initialPhone, initialAddress }: Props) {
   const [phone, setPhone] = useState(initialPhone)
   const [address, setAddress] = useState(initialAddress)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
-  const { theme, setTheme } = useTheme()
+  const [themePreference, setThemePreference] = useState<"default" | "light" | "dark">("default")
+  const { setTheme } = useTheme()
+
+  useEffect(() => {
+    const key = `privateex:theme:${userId}`
+    const savedPreference = localStorage.getItem(key)
+
+    if (savedPreference === "light" || savedPreference === "dark") {
+      setThemePreference(savedPreference)
+      setTheme(savedPreference)
+      return
+    }
+
+    setThemePreference("default")
+    setTheme("dark")
+  }, [setTheme, userId])
 
   const saveProfile = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -90,21 +106,33 @@ export function DashboardSettingsForm({ initialPhone, initialAddress }: Props) {
       <div className="space-y-4 rounded-2xl border border-border bg-card/50 p-6">
         <h2 className="text-xl font-semibold">Theme</h2>
         <p className="text-sm text-muted-foreground">
-          Choose your appearance preference. Default theme follows your system setting.
+          Choose your appearance preference. Default theme is dark for this platform.
         </p>
 
         <div className="flex flex-wrap gap-2">
           {[
-            { id: "system", label: "Default" },
+            { id: "default", label: "Default" },
             { id: "light", label: "Light" },
             { id: "dark", label: "Dark" },
           ].map((option) => (
             <button
               key={option.id}
               type="button"
-              onClick={() => setTheme(option.id)}
+              onClick={() => {
+                const key = `privateex:theme:${userId}`
+                if (option.id === "default") {
+                  localStorage.removeItem(key)
+                  setTheme("dark")
+                  setThemePreference("default")
+                  return
+                }
+
+                localStorage.setItem(key, option.id)
+                setTheme(option.id)
+                setThemePreference(option.id as "light" | "dark")
+              }}
               className={`rounded-md border px-4 py-2 text-sm ${
-                theme === option.id
+                themePreference === option.id
                   ? "border-primary bg-primary/15 text-primary"
                   : "border-border bg-background text-foreground"
               }`}

@@ -2,10 +2,11 @@
 
 import type React from "react"
 import Link from "next/link"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Building2, Briefcase, History, Shield, LogOut, Settings, HelpCircle, Mail, Menu, X } from "lucide-react"
 import type { Investor } from "@/lib/auth"
 import { InactivityLogout } from "@/components/inactivity-logout"
+import { useTheme } from "next-themes"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -14,6 +15,14 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { setTheme } = useTheme()
+
+  useEffect(() => {
+    const key = `privateex:theme:${user.id}`
+    const savedPreference = localStorage.getItem(key)
+    const resolvedTheme = savedPreference === "light" || savedPreference === "dark" ? savedPreference : "dark"
+    setTheme(resolvedTheme)
+  }, [setTheme, user.id])
 
   return (
     <div

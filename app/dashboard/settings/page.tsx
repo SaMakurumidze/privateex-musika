@@ -31,7 +31,11 @@ export default async function SettingsPage() {
           <p className="text-lg text-muted-foreground">Manage your profile and appearance preferences</p>
         </div>
 
-        <DashboardSettingsForm initialPhone={profile.phone || ""} initialAddress={profile.address || ""} />
+        <DashboardSettingsForm
+          userId={session.id}
+          initialPhone={profile.phone || ""}
+          initialAddress={profile.address || ""}
+        />
       </div>
     </DashboardLayout>
   )
