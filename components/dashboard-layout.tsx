@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { Building2, Briefcase, History, Shield, LogOut, Settings, HelpCircle, Mail, Menu, X } from "lucide-react"
 import type { Investor } from "@/lib/auth"
+import { InactivityLogout } from "@/components/inactivity-logout"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -19,6 +20,8 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       data-dashboard-shell="true"
       className="min-h-screen bg-gradient-to-br from-background via-card to-muted"
     >
+      <InactivityLogout logoutEndpoint="/api/auth/logout" redirectTo="/" />
+
       {/* Topbar */}
       <header className="fixed top-0 left-0 right-0 h-20 bg-background/80 backdrop-blur-xl border-b border-border z-50">
         <div className="h-full px-4 sm:px-6 flex items-center justify-between">

@@ -1,13 +1,22 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createSQLClient } from "@/lib/db"
 import { assertEmail } from "@/lib/input-safety"
-import { sendTransactionalEmail } from "@/lib/mailer"
+import {
+  BETA_EMAIL_NOT_CONFIGURED_MESSAGE,
+  isEmailServiceConfigured,
+  sendTransactionalEmail,
+} from "@/lib/mailer"
 import crypto from "crypto"
 
 export async function POST(request: NextRequest) {
   try {
     const { email: rawEmail } = await request.json()
     const email = assertEmail(rawEmail)
+
+    if (!isEmailServiceConfigured()) {
+      return NextResponse.json({ error: BETA_EMAIL_NOT_CONFIGURED_MESSAGE }, { status: 503 })
+    }
+
     const sql = createSQLClient()
 
     // Check if email exists

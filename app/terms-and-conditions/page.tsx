@@ -35,7 +35,7 @@ export default function TermsAndConditionsPage() {
             <h2 className="text-base font-semibold text-white">
               3. NATURE AND PURPOSE OF THE PLATFORM
             </h2>
-            <p>3.1 The Platform is a proof-of-concept and demonstration system designed to:</p>
+            <p>3.1 The Platform is a minimum viable product (MVP), and demonstrates the system designed to:</p>
             <ul className="list-disc space-y-1 pl-6">
               <li>Showcase the concept of pre-IPO private business visibility</li>
               <li>Provide simulated investment experiences</li>

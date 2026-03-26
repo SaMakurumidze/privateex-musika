@@ -5,12 +5,19 @@ type SendMailInput = {
   text: string
 }
 
+export const BETA_EMAIL_NOT_CONFIGURED_MESSAGE =
+  "Email service not configured for this beta version."
+
+export function isEmailServiceConfigured() {
+  return Boolean(process.env.RESEND_API_KEY && process.env.MAIL_FROM)
+}
+
 export async function sendTransactionalEmail(input: SendMailInput): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY
   const from = process.env.MAIL_FROM
 
   if (!apiKey || !from) {
-    throw new Error("Missing email configuration. Set RESEND_API_KEY and MAIL_FROM.")
+    throw new Error(BETA_EMAIL_NOT_CONFIGURED_MESSAGE)
   }
 
   const response = await fetch("https://api.resend.com/emails", {

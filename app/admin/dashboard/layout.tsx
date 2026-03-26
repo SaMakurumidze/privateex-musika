@@ -2,6 +2,7 @@ import React from "react"
 import { redirect } from "next/navigation"
 import { getAdminSession, getPermissions } from "@/lib/admin-auth"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { InactivityLogout } from "@/components/inactivity-logout"
 
 export default async function AdminDashboardLayout({
   children,
@@ -18,6 +19,7 @@ export default async function AdminDashboardLayout({
 
   return (
     <div className="min-h-screen bg-background">
+      <InactivityLogout logoutEndpoint="/api/admin/auth/logout" redirectTo="/admin" />
       <AdminSidebar
         admin={{
           name: admin.name,
