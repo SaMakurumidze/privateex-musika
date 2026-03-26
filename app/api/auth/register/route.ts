@@ -21,21 +21,26 @@ export async function POST(request: NextRequest) {
     } = body
     const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : ""
 
+    const normalizedFullName = typeof full_name === "string" ? full_name.trim() : ""
+    const normalizedIdPassport = typeof id_passport === "string" ? id_passport.trim() : ""
+    const normalizedCountry = typeof country === "string" ? country.trim() : ""
+    const normalizedAddress = typeof address === "string" ? address.trim() : ""
+
     // Required field validation
-    if (!full_name || !email || !password || !confirm_password || !id_passport || !phone || !country) {
+    if (!normalizedFullName || !email || !password || !confirm_password || !normalizedIdPassport || !phone || !normalizedCountry) {
       const missingFields = []
-      if (!full_name) missingFields.push("full_name")
+      if (!normalizedFullName) missingFields.push("full_name")
       if (!email) missingFields.push("email")
       if (!password) missingFields.push("password")
       if (!confirm_password) missingFields.push("confirm_password")
-      if (!id_passport) missingFields.push("id_passport")
+      if (!normalizedIdPassport) missingFields.push("id_passport")
       if (!phone) missingFields.push("phone")
-      if (!country) missingFields.push("country")
+      if (!normalizedCountry) missingFields.push("country")
       return NextResponse.json({ error: `Please fill in all required fields: ${missingFields.join(", ")}` }, { status: 400 })
     }
 
     // Full name validation (at least 2 words for proper identification)
-    const nameParts = full_name.trim().split(/\s+/)
+    const nameParts = normalizedFullName.split(/\s+/)
     if (nameParts.length < 2) {
       return NextResponse.json({ error: "Please enter your full name (first and last name)" }, { status: 400 })
     }
@@ -58,7 +63,7 @@ export async function POST(request: NextRequest) {
 
     // ID/Passport validation (alphanumeric, 6-20 characters)
     const idPassportRegex = /^[A-Za-z0-9-]{6,20}$/
-    if (!idPassportRegex.test(id_passport)) {
+    if (!idPassportRegex.test(normalizedIdPassport)) {
       return NextResponse.json(
         { error: "Invalid ID/Passport number. Must be 6-20 alphanumeric characters." },
         { status: 400 }
@@ -78,6 +83,28 @@ export async function POST(request: NextRequest) {
     // Create SQL client after all validations pass
     const sql = createSQLClient()
 
+    // Backward-compatible schema guard for older production databases.
+    await sql`
+      ALTER TABLE investors
+      ADD COLUMN IF NOT EXISTS email_verified BOOLEAN NOT NULL DEFAULT FALSE
+    `
+    await sql`
+      ALTER TABLE investors
+      ADD COLUMN IF NOT EXISTS email_verification_token VARCHAR(255)
+    `
+    await sql`
+      ALTER TABLE investors
+      ADD COLUMN IF NOT EXISTS token_expires TIMESTAMP
+    `
+    await sql`
+      ALTER TABLE investors
+      ADD COLUMN IF NOT EXISTS reset_token VARCHAR(255)
+    `
+    await sql`
+      ALTER TABLE investors
+      ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP
+    `
+
     // Check if email already exists
     const existingEmail = await sql`
       SELECT id FROM investors WHERE LOWER(email) = LOWER(${email})
@@ -89,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     // Check if ID/Passport already exists
     const existingIdPassport = await sql`
-      SELECT id FROM investors WHERE id_passport = ${id_passport}
+      SELECT id FROM investors WHERE id_passport = ${normalizedIdPassport}
     `
 
     if (existingIdPassport.length > 0) {
@@ -118,13 +145,13 @@ export async function POST(request: NextRequest) {
         token_expires
       )
       VALUES (
-        ${full_name}, 
+        ${normalizedFullName}, 
         ${email}, 
         ${hashedPassword}, 
-        ${id_passport}, 
+        ${normalizedIdPassport}, 
         ${cleanPhone}, 
-        ${country}, 
-        ${address || null},
+        ${normalizedCountry}, 
+        ${normalizedAddress || null},
         'Angel Investor',
         ${profilePicUrl},
         FALSE,
@@ -165,9 +192,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Send verification email
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : "http://localhost:3000"
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
     const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`
     
     // Log verification link for development (in production, send actual email)
@@ -205,7 +232,12 @@ export async function POST(request: NextRequest) {
     }
     
     // Log unexpected errors for debugging
-    console.error("Registration error:", dbError.message || error)
+    console.error("Registration error:", {
+      code: dbError.code,
+      constraint: dbError.constraint,
+      detail: dbError.detail,
+      message: dbError.message || String(error),
+    })
     return NextResponse.json({ error: "Registration failed. Please try again." }, { status: 500 })
   }
 }
