@@ -3,13 +3,11 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { Shield, Globe, LineChart, ArrowLeft } from "lucide-react"
 
 type ViewType = "login" | "register" | "forgot-password"
 
 export default function HomePage() {
-  const router = useRouter()
   const [view, setView] = useState<ViewType>("login")
 
   // Login state
@@ -189,7 +187,7 @@ export default function HomePage() {
         setLoading(false)
         return
       }
-      let data: { error?: string; success?: boolean; message?: string }
+      let data: { error?: string; success?: boolean; message?: string; redirect?: string }
       try {
         data = await response.json()
       } catch {
@@ -205,32 +203,9 @@ export default function HomePage() {
         return
       }
 
-      // Store the registered email to pre-fill login form
-      const registeredEmail = registerEmail
-
-      // Show success message
-      setSuccess("Account created successfully! Redirecting to login...")
-      setLoading(false)
-      
-      // Clear form fields but keep success message visible
-      setFullName("")
-      setRegisterEmail("")
-      setRegisterPassword("")
-      setConfirmPassword("")
-      setIdPassport("")
-      setPhone("")
-      setCountry("")
-      setAddress("")
-      setAgreedToTerms(false)
-      setProfilePicture(null)
-      setProfilePicturePreview(null)
-      
-      // Redirect to login view after 2 seconds, pre-filling the email
-      setTimeout(() => {
-        setSuccess("")
-        setView("login")
-        setEmail(registeredEmail)
-      }, 2000)
+      const redirectTo = data.redirect || "/dashboard"
+      window.location.href = redirectTo
+      return
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An error occurred. Please try again."
       setError(errorMessage)
