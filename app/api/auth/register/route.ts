@@ -142,6 +142,26 @@ export async function POST(request: NextRequest) {
         INSERT INTO wallets (investor_id, balance)
         VALUES (${investorId}, 10000.00)
       `
+
+      await sql`
+        CREATE TABLE IF NOT EXISTS investor_messages (
+          id SERIAL PRIMARY KEY,
+          investor_id INTEGER NOT NULL REFERENCES investors(id) ON DELETE CASCADE,
+          subject VARCHAR(255) NOT NULL,
+          body TEXT NOT NULL,
+          is_read BOOLEAN NOT NULL DEFAULT FALSE,
+          created_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )
+      `
+
+      await sql`
+        INSERT INTO investor_messages (investor_id, subject, body)
+        VALUES (
+          ${investorId},
+          'Welcome to PrivateEx. Global',
+          ${"Hi there, Thank you for registering an account with PrivateEx. I hope that your experience is/was intuitive, educative, informative, and above all exciting. However, if your experience is on the contrary, I'd love to know everything about it and improve the user experience in the final build. You can contact me via WhatsApp on +263787182187 or +263773414710. Bye for now!"}
+        )
+      `
     }
 
     // Send verification email
