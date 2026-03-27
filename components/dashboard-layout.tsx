@@ -7,6 +7,7 @@ import { Building2, Briefcase, History, Shield, LogOut, Settings, HelpCircle, Ma
 import type { Investor } from "@/lib/auth"
 import { InactivityLogout } from "@/components/inactivity-logout"
 import { useTheme } from "next-themes"
+import { usePathname } from "next/navigation"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -15,7 +16,9 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const { setTheme } = useTheme()
+  const pathname = usePathname()
 
   useEffect(() => {
     const key = `privateex:theme:${user.id}`
@@ -23,6 +26,35 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
     const resolvedTheme = savedPreference === "light" || savedPreference === "dark" ? savedPreference : "dark"
     setTheme(resolvedTheme)
   }, [setTheme, user.id])
+
+  useEffect(() => {
+    if (pathname === "/dashboard/messages") {
+      setUnreadMessages(0)
+    }
+  }, [pathname])
+
+  useEffect(() => {
+    let active = true
+    const loadUnreadCount = async () => {
+      try {
+        const response = await fetch("/api/messages/unread-count", { cache: "no-store" })
+        if (!response.ok) return
+        const data = (await response.json()) as { unreadCount?: number }
+        if (active) {
+          setUnreadMessages(Number(data.unreadCount || 0))
+        }
+      } catch {
+        // Keep UI quiet if polling fails intermittently.
+      }
+    }
+
+    loadUnreadCount()
+    const timer = setInterval(loadUnreadCount, 30000)
+    return () => {
+      active = false
+      clearInterval(timer)
+    }
+  }, [])
 
   return (
     <div
@@ -57,6 +89,22 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
           </div>
 
           <div className="flex items-center gap-4">
+            <Link
+              href="/dashboard/messages"
+              className="relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card/50 text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Open messages"
+              title="Open messages"
+            >
+              <Mail className="h-5 w-5" />
+              {unreadMessages > 0 ? (
+                <>
+                  <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
+                  <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
+                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                  </span>
+                </>
+              ) : null}
+            </Link>
             <span className="text-sm text-muted-foreground hidden md:block">Welcome, {user.full_name}!</span>
             <div className="h-10 w-10 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-semibold">
               {user.full_name.charAt(0).toUpperCase()}
@@ -97,7 +145,12 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <MobileNavLink href="/dashboard/transactions" icon={History} onNavigate={() => setMobileMenuOpen(false)}>
                   Transactions
                 </MobileNavLink>
-                <MobileNavLink href="/dashboard/messages" icon={Mail} onNavigate={() => setMobileMenuOpen(false)}>
+                <MobileNavLink
+                  href="/dashboard/messages"
+                  icon={Mail}
+                  badgeCount={unreadMessages}
+                  onNavigate={() => setMobileMenuOpen(false)}
+                >
                   Messages
                 </MobileNavLink>
                 <MobileNavLink href="/dashboard/help" icon={HelpCircle} onNavigate={() => setMobileMenuOpen(false)}>
@@ -136,7 +189,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             <NavLink href="/dashboard/transactions" icon={History}>
               Transactions
             </NavLink>
-            <NavLink href="/dashboard/messages" icon={Mail}>
+            <NavLink href="/dashboard/messages" icon={Mail} badgeCount={unreadMessages}>
               Messages
             </NavLink>
           </div>
@@ -171,16 +224,22 @@ interface NavLinkProps {
   href: string
   icon: React.ElementType
   children: React.ReactNode
+  badgeCount?: number
 }
 
-function NavLink({ href, icon: Icon, children }: NavLinkProps) {
+function NavLink({ href, icon: Icon, children, badgeCount = 0 }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-primary/5 transition-all duration-200"
+      className="flex items-center gap-3 rounded-lg px-4 py-3 text-muted-foreground transition-all duration-200 hover:bg-primary/5 hover:text-foreground"
     >
       <Icon className="h-5 w-5" />
       <span className="font-medium">{children}</span>
+      {badgeCount > 0 ? (
+        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      ) : null}
     </Link>
   )
 }
@@ -189,6 +248,7 @@ function MobileNavLink({
   href,
   icon: Icon,
   children,
+  badgeCount = 0,
   onNavigate,
 }: NavLinkProps & { onNavigate?: () => void }) {
   return (
@@ -199,6 +259,11 @@ function MobileNavLink({
     >
       <Icon className="h-5 w-5" />
       <span className="font-medium">{children}</span>
+      {badgeCount > 0 ? (
+        <span className="ml-auto rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      ) : null}
     </Link>
   )
 }

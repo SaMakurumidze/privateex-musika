@@ -170,7 +170,19 @@ export async function POST(request: NextRequest) {
       VALUES (
         ${investorId},
         'Welcome to PrivateEx. Global',
-        ${"Hi there, Thank you for registering an account with PrivateEx. I hope that your experience is/was intuitive, educative, informative, and above all exciting. However, if your experience is on the contrary, I'd love to know everything about it and improve the user experience in the final build. You can contact me via WhatsApp on +263787182187 or +263773414710. Bye for now!"}
+        ${`Hi there,
+
+Thank you for registering an account with PrivateEx.
+
+I hope your experience is intuitive, educative, informative, and above all exciting.
+
+If your experience is on the contrary, I would love to know everything about it so we can improve the final build.
+
+You can contact me via WhatsApp on +263787182187 or +263773414710.
+
+Bye for now!
+
+PrivateEx. Team`}
       )
     `
 

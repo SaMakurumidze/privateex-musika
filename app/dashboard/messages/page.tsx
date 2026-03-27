@@ -33,6 +33,12 @@ export default async function MessagesPage() {
     ORDER BY created_at DESC
   `
 
+  await sql`
+    UPDATE investor_messages
+    SET is_read = TRUE
+    WHERE investor_id = ${session.id} AND is_read = FALSE
+  `
+
   return (
     <DashboardLayout user={session}>
       <div className="space-y-8">
@@ -59,7 +65,13 @@ export default async function MessagesPage() {
                     {new Date(message.created_at).toLocaleString()}
                   </span>
                 </div>
-                <p className="mt-3 whitespace-pre-line text-sm text-muted-foreground">{message.body}</p>
+                <div className="mt-3 space-y-3 text-sm text-muted-foreground">
+                  {String(message.body || "")
+                    .split(/\n\s*\n/)
+                    .map((paragraph: string, index: number) => (
+                      <p key={`${message.id}-p-${index}`}>{paragraph.trim()}</p>
+                    ))}
+                </div>
               </article>
             ))}
           </div>
