@@ -102,7 +102,7 @@ export default async function AdminTransactionsPage({
         </p>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card/50 p-6 backdrop-blur-xl">
+      <div className="admin-panel p-6">
         <form className="mb-6 grid grid-cols-1 gap-3 lg:grid-cols-12">
           <div className="relative lg:col-span-3">
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />

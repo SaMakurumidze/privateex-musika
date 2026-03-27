@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
           <p className="text-muted-foreground mt-2">PrivateEx Global Management Console</p>
         </div>
 
-        <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-8">
+        <div className="admin-panel p-8">
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
               <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">

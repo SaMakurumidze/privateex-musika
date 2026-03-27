@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useTheme } from "next-themes"
 import {
   Shield,
   Building2,
@@ -14,8 +16,11 @@ import {
   Mail,
   LogOut,
   ChevronRight,
+  Moon,
+  Sun,
 } from "lucide-react"
 import type { AdminRole, Permission } from "@/lib/admin-auth"
+import { setAdminThemePreference } from "@/components/admin/admin-theme-sync"
 
 interface AdminSidebarProps {
   admin: {
@@ -85,6 +90,12 @@ const navItems = [
 
 export function AdminSidebar({ admin, permissions }: AdminSidebarProps) {
   const pathname = usePathname()
+  const { setTheme, resolvedTheme } = useTheme()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const getRoleBadgeColor = (role: AdminRole) => {
     switch (role) {
@@ -101,14 +112,16 @@ export function AdminSidebar({ admin, permissions }: AdminSidebarProps) {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-card/50 backdrop-blur-xl border-r border-border flex flex-col">
-      <div className="shrink-0 p-6 border-b border-border">
+    <aside className="admin-sidebar fixed left-0 top-0 flex h-screen w-64 flex-col bg-card/50 backdrop-blur-xl">
+      <div className="admin-sidebar-header shrink-0 border-b border-border p-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-primary/10 border border-primary/20">
-            <Shield className="h-6 w-6 text-primary" />
+          <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm dark:bg-transparent dark:from-transparent dark:to-transparent dark:shadow-none">
+            <Shield className="h-5 w-5 text-white dark:h-6 dark:w-6 dark:text-primary" />
           </div>
           <div>
-            <h1 className="font-bold text-foreground">PrivateEx</h1>
+            <h1 className="bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-lg font-bold text-transparent dark:from-primary dark:to-secondary">
+              PrivateEx
+            </h1>
             <p className="text-xs text-muted-foreground">Admin Console</p>
           </div>
         </div>
@@ -139,8 +152,38 @@ export function AdminSidebar({ admin, permissions }: AdminSidebarProps) {
         })}
       </nav>
 
-      <div className="shrink-0 p-4 pb-6 border-t border-border mt-auto">
-        <div className="p-3 bg-background/50 rounded-xl mb-3">
+      <div className="admin-sidebar-footer mt-auto shrink-0 border-t border-border p-4 pb-6">
+        {mounted ? (
+          <div className="mb-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setAdminThemePreference("light", setTheme)}
+              className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                resolvedTheme === "light"
+                  ? "border-primary/40 bg-primary/15 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted/50"
+              }`}
+              aria-label="Light theme"
+            >
+              <Sun className="h-4 w-4" />
+              Light
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminThemePreference("dark", setTheme)}
+              className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                resolvedTheme === "dark"
+                  ? "border-primary/40 bg-primary/15 text-primary"
+                  : "border-border text-muted-foreground hover:bg-muted/50"
+              }`}
+              aria-label="Dark theme"
+            >
+              <Moon className="h-4 w-4" />
+              Dark
+            </button>
+          </div>
+        ) : null}
+        <div className="mb-3 rounded-xl bg-background/50 p-3">
           <p className="font-medium text-foreground text-sm truncate">{admin.name}</p>
           <p className="text-xs text-muted-foreground truncate">{admin.email}</p>
           <span className={`inline-block mt-2 px-2 py-0.5 text-xs font-medium rounded-full border ${getRoleBadgeColor(admin.role)}`}>

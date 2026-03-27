@@ -117,7 +117,7 @@ export default async function AdminTransactionDetailsPage({
         </Link>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card/50 p-6">
+      <section className="admin-panel p-6">
         <h2 className="mb-4 text-xl font-semibold">Investment</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Info label="Transaction ID" value={tx.transaction_id} />
@@ -151,7 +151,7 @@ export default async function AdminTransactionDetailsPage({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card/50 p-6">
+      <section className="admin-panel p-6">
         <h2 className="mb-4 text-xl font-semibold">Investor Profile</h2>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Info label="Full Name" value={tx.full_name} />
@@ -167,7 +167,7 @@ export default async function AdminTransactionDetailsPage({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card/50 p-6">
+      <section className="admin-panel p-6">
         <h2 className="mb-4 text-xl font-semibold">Investor Recent History</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px]">

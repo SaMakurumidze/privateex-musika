@@ -104,7 +104,7 @@ export default async function AdminDashboardPage() {
         />
       </div>
 
-      <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
+      <div className="admin-panel p-6">
         <h2 className="text-xl font-bold text-foreground mb-4">Top Companies by Capital Raised</h2>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -154,7 +154,7 @@ function StatCard({
   subtext: string
 }) {
   return (
-    <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
+    <div className="admin-panel p-6">
       <div className="flex items-center justify-between gap-4 mb-4">
         <p className="text-sm font-medium text-muted-foreground">{label}</p>
         <div className="shrink-0 p-2.5 rounded-xl bg-primary/10 border border-primary/20">

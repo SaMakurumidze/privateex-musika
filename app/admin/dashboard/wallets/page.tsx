@@ -63,7 +63,7 @@ export default async function AdminWalletsPage({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
+        <div className="admin-panel p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-primary/10 border border-primary/20">
               <Wallet className="h-6 w-6 text-primary" />
@@ -76,7 +76,7 @@ export default async function AdminWalletsPage({
             </div>
           </div>
         </div>
-        <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
+        <div className="admin-panel p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
               <Wallet className="h-6 w-6 text-emerald-400" />
@@ -87,7 +87,7 @@ export default async function AdminWalletsPage({
             </div>
           </div>
         </div>
-        <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
+        <div className="admin-panel p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
               <Wallet className="h-6 w-6 text-amber-400" />
@@ -102,7 +102,7 @@ export default async function AdminWalletsPage({
         </div>
       </div>
 
-      <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
+      <div className="admin-panel p-6">
         <form className="flex gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

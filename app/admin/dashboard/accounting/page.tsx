@@ -198,7 +198,7 @@ export default async function AdminAccountingPage({
         />
       </div>
 
-      <section className="rounded-2xl border border-border bg-card/50 p-6">
+      <section className="admin-panel p-6">
         <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <h2 className="text-xl font-semibold">Filters</h2>
           <Link
@@ -261,7 +261,7 @@ export default async function AdminAccountingPage({
         </form>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card/50 p-6">
+      <section className="admin-panel p-6">
         <h2 className="mb-4 text-xl font-semibold">Monthly Rollups (12 months)</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[900px]">
@@ -300,7 +300,7 @@ export default async function AdminAccountingPage({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-card/50 p-6">
+      <section className="admin-panel p-6">
         <h2 className="mb-4 text-xl font-semibold">Charge Log</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1200px]">
@@ -363,7 +363,7 @@ function KpiCard({
   subtext: string
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card/50 p-5">
+    <div className="admin-panel p-5">
       <div className="mb-3 flex items-center gap-2">
         <Icon className="h-5 w-5 text-primary" />
         <p className="text-sm text-muted-foreground">{label}</p>

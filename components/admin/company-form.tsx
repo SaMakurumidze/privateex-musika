@@ -76,7 +76,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
   const inputClass = "w-full px-4 py-3 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
 
   return (
-    <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6 max-w-2xl">
+    <div className="admin-panel max-w-2xl p-6">
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">

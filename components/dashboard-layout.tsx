@@ -59,7 +59,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   return (
     <div
       data-dashboard-shell="true"
-      className="min-h-screen bg-gradient-to-br from-background via-card to-muted"
+      className="min-h-screen bg-gradient-to-br from-background via-indigo-50/50 to-purple-50/60 dark:from-background dark:via-card dark:to-muted"
     >
       <InactivityLogout logoutEndpoint="/api/auth/logout" redirectTo="/" />
 
@@ -80,8 +80,10 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               className="inline-flex items-center gap-3 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Go to dashboard"
             >
-              <Shield className="h-8 w-8 text-primary" />
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 shadow-sm dark:bg-transparent dark:from-transparent dark:to-transparent dark:shadow-none">
+                <Shield className="h-5 w-5 text-white dark:h-8 dark:w-8 dark:text-primary" />
+              </span>
+              <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-600 bg-clip-text text-transparent dark:from-primary dark:to-secondary">
                 PrivateEx. Global
               </span>
             </Link>

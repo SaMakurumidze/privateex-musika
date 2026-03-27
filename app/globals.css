@@ -3,41 +3,41 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Updated color scheme to match the original purple/indigo pre-IPO platform design */
+/* Light theme: white surfaces + indigo–purple brand gradient (aligned with dark theme hues) */
 :root {
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.12 0 0);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.22 0.03 264);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0 0);
+  --card-foreground: oklch(0.22 0.03 264);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0 0);
-  --primary: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.22 0.03 264);
+  --primary: oklch(0.58 0.22 285);
   --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.88 0 0);
-  --secondary-foreground: oklch(0.12 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.35 0 0);
-  --accent: oklch(0.9 0 0);
-  --accent-foreground: oklch(0.12 0 0);
-  --destructive: oklch(0.2 0 0);
+  --secondary: oklch(0.52 0.2 272);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.97 0.012 280);
+  --muted-foreground: oklch(0.48 0.04 264);
+  --accent: oklch(0.96 0.025 285);
+  --accent-foreground: oklch(0.32 0.08 285);
+  --destructive: oklch(0.52 0.2 25);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.12 0 0);
-  --input: oklch(0.12 0 0);
-  --ring: oklch(0.12 0 0);
-  --chart-1: oklch(0.2 0 0);
-  --chart-2: oklch(0.35 0 0);
-  --chart-3: oklch(0.5 0 0);
-  --chart-4: oklch(0.65 0 0);
-  --chart-5: oklch(0.8 0 0);
+  --border: oklch(0.9 0.02 275);
+  --input: oklch(0.9 0.02 275);
+  --ring: oklch(0.58 0.22 285);
+  --chart-1: oklch(0.58 0.22 285);
+  --chart-2: oklch(0.52 0.2 272);
+  --chart-3: oklch(0.45 0.18 264);
+  --chart-4: oklch(0.65 0.16 300);
+  --chart-5: oklch(0.72 0.14 310);
   --radius: 0.75rem;
-  --sidebar: oklch(0.98 0 0);
-  --sidebar-foreground: oklch(0.12 0 0);
-  --sidebar-primary: oklch(0.12 0 0);
+  --sidebar: oklch(0.995 0.008 280);
+  --sidebar-foreground: oklch(0.22 0.03 264);
+  --sidebar-primary: oklch(0.58 0.22 285);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.9 0 0);
-  --sidebar-accent-foreground: oklch(0.12 0 0);
-  --sidebar-border: oklch(0.12 0 0);
-  --sidebar-ring: oklch(0.12 0 0);
+  --sidebar-accent: oklch(0.96 0.025 285);
+  --sidebar-accent-foreground: oklch(0.32 0.08 285);
+  --sidebar-border: oklch(0.9 0.02 275);
+  --sidebar-ring: oklch(0.58 0.22 285);
 }
 
 .dark {
@@ -123,6 +123,80 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer components {
+  /* Shared admin / login surfaces: light mode gets indigo–violet gradient border */
+  .admin-panel {
+    @apply rounded-2xl border border-border bg-card/50 backdrop-blur-xl;
+  }
+
+  html.light .admin-panel {
+    border: 1px solid transparent;
+    background-color: transparent;
+    background-image:
+      linear-gradient(oklch(1 0 0 / 0.94), oklch(1 0 0 / 0.94)),
+      linear-gradient(135deg, oklch(0.58 0.22 285), oklch(0.52 0.2 272));
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+}
+
+/* Admin shell: light chrome (gradient strip + sidebar edge) */
+html.light [data-admin-shell="true"] .admin-main-wrap {
+  background: linear-gradient(
+    to bottom right,
+    oklch(1 0 0),
+    oklch(0.985 0.025 285),
+    oklch(0.98 0.03 300)
+  );
+}
+
+html.light [data-admin-shell="true"] .admin-main-wrap::before {
+  content: "";
+  display: block;
+  height: 3px;
+  width: 100%;
+  flex-shrink: 0;
+  background: linear-gradient(
+    90deg,
+    oklch(0.58 0.22 285),
+    oklch(0.55 0.21 278),
+    oklch(0.52 0.2 272)
+  );
+}
+
+html.dark [data-admin-shell="true"] .admin-main-wrap::before {
+  content: "";
+  display: block;
+  height: 1px;
+  width: 100%;
+  flex-shrink: 0;
+  background: var(--border);
+}
+
+html.dark [data-admin-shell="true"] aside.admin-sidebar {
+  border-right: 1px solid var(--border);
+}
+
+html.light [data-admin-shell="true"] aside.admin-sidebar {
+  border-right: 2px solid;
+  border-image: linear-gradient(to bottom, oklch(0.58 0.22 285), oklch(0.52 0.2 272)) 1;
+  background: oklch(1 0 0 / 0.88);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+
+html.light [data-admin-shell="true"] .admin-sidebar-header {
+  border-bottom: 2px solid;
+  border-image: linear-gradient(90deg, oklch(0.58 0.22 285), oklch(0.52 0.2 272)) 1;
+}
+
+html.light [data-admin-shell="true"] .admin-sidebar-footer {
+  border-top: 2px solid;
+  border-image: linear-gradient(90deg, oklch(0.58 0.22 285), oklch(0.52 0.2 272)) 1;
 }
 
 /* Keep the global footer aligned to dashboard content area (right of sidebar). */

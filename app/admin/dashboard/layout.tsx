@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { getAdminSession, getPermissions } from "@/lib/admin-auth"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { InactivityLogout } from "@/components/inactivity-logout"
-import { AdminForceDarkTheme } from "@/components/admin-force-dark-theme"
+import { AdminThemeSync } from "@/components/admin/admin-theme-sync"
 
 export default async function AdminDashboardLayout({
   children,
@@ -20,7 +20,7 @@ export default async function AdminDashboardLayout({
 
   return (
     <div data-admin-shell="true" className="min-h-screen bg-background">
-      <AdminForceDarkTheme />
+      <AdminThemeSync />
       <InactivityLogout logoutEndpoint="/api/admin/auth/logout" redirectTo="/admin" />
       <AdminSidebar
         admin={{
@@ -30,8 +30,8 @@ export default async function AdminDashboardLayout({
         }}
         permissions={permissions}
       />
-      <main className="ml-64 p-8">
-        {children}
+      <main className="admin-main-wrap ml-64 flex min-h-screen flex-col bg-background">
+        <div className="flex-1 p-8">{children}</div>
       </main>
     </div>
   )

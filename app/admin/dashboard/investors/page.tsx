@@ -63,7 +63,7 @@ export default async function AdminInvestorsPage({
         <p className="text-muted-foreground mt-1">Manage investor accounts</p>
       </div>
 
-      <div className="bg-card/50 backdrop-blur-xl border border-border rounded-2xl p-6">
+      <div className="admin-panel p-6">
         <form className="flex gap-4 mb-6">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

@@ -71,7 +71,7 @@ export function AdminMessagesPanel({ investors }: { investors: InvestorOption[] 
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-card/50 p-6">
+    <section className="admin-panel p-6">
       <h2 className="text-xl font-semibold text-foreground">Send Message</h2>
       <p className="mt-1 text-sm text-muted-foreground">
         Broadcast announcements to all investors or send a targeted message to an individual user.

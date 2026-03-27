@@ -208,7 +208,7 @@ export default async function AdminAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card/50 p-6">
+        <section className="admin-panel p-6">
           <div className="mb-4 flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-semibold">Monthly Investment Trend (6 months)</h2>
@@ -240,7 +240,7 @@ export default async function AdminAnalyticsPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card/50 p-6">
+        <section className="admin-panel p-6">
           <div className="mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
             <h2 className="text-xl font-semibold">Sector Performance</h2>
@@ -264,7 +264,7 @@ export default async function AdminAnalyticsPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <section className="rounded-2xl border border-border bg-card/50 p-6">
+        <section className="admin-panel p-6">
           <h2 className="mb-4 text-xl font-semibold">Top Companies by Capital Raised</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px]">
@@ -299,7 +299,7 @@ export default async function AdminAnalyticsPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-border bg-card/50 p-6">
+        <section className="admin-panel p-6">
           <h2 className="mb-4 text-xl font-semibold">Top Investors by Activity</h2>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[520px]">
@@ -335,7 +335,7 @@ export default async function AdminAnalyticsPage() {
         </section>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card/50 p-6">
+      <section className="admin-panel p-6">
         <div className="mb-4 flex items-center gap-2">
           <Globe2 className="h-5 w-5 text-primary" />
           <h2 className="text-xl font-semibold">Investor Geography</h2>
@@ -369,7 +369,7 @@ function KpiCard({
   subtext: string
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card/50 p-5">
+    <div className="admin-panel p-5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">{label}</p>
         <div className="rounded-lg border border-primary/20 bg-primary/10 p-2">

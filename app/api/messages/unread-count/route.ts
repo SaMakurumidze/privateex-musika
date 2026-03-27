@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
 import { createSQLClient } from "@/lib/db"
+import { ensureConversationMessagesTable } from "@/lib/conversation-messages"
 
 export const runtime = "nodejs"
 
@@ -22,15 +23,28 @@ export async function GET() {
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
       )
     `
+    await ensureConversationMessagesTable(sql)
 
-    const rows = await sql`
-      SELECT COUNT(*)::int AS unread_count
-      FROM investor_messages
-      WHERE investor_id = ${session.id} AND is_read = FALSE
-    `
+    const [announcementRows, conversationRows] = await Promise.all([
+      sql`
+        SELECT COUNT(*)::int AS c
+        FROM investor_messages
+        WHERE investor_id = ${session.id} AND is_read = FALSE
+      `,
+      sql`
+        SELECT COUNT(*)::int AS c
+        FROM conversation_messages
+        WHERE investor_id = ${session.id}
+          AND sender_type = 'admin'
+          AND read_by_investor_at IS NULL
+      `,
+    ])
+
+    const unread =
+      Number(announcementRows[0]?.c || 0) + Number(conversationRows[0]?.c || 0)
 
     return NextResponse.json({
-      unreadCount: Number(rows[0]?.unread_count || 0),
+      unreadCount: unread,
     })
   } catch (error) {
     console.error("Unread message count error:", error)

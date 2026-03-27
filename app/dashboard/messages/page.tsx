@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation"
-import { Mail } from "lucide-react"
 import { getSession } from "@/lib/auth"
 import { createSQLClient } from "@/lib/db"
 import { DashboardLayout } from "@/components/dashboard-layout"
+import { ensureConversationMessagesTable } from "@/lib/conversation-messages"
+import { InvestorMessagesView, type AnnouncementItem, type ConversationItem } from "@/components/investor-messages-view"
 
 export const dynamic = "force-dynamic"
 
@@ -25,57 +26,79 @@ export default async function MessagesPage() {
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `
+  await ensureConversationMessagesTable(sql)
 
-  const messages = await sql`
-    SELECT id, subject, body, is_read, created_at
-    FROM investor_messages
-    WHERE investor_id = ${session.id}
-    ORDER BY created_at DESC
-  `
+  const [announcementRows, conversationRows] = await Promise.all([
+    sql`
+      SELECT id, subject, body, created_at
+      FROM investor_messages
+      WHERE investor_id = ${session.id}
+      ORDER BY created_at DESC
+    `,
+    sql`
+      SELECT
+        c.id,
+        c.sender_type,
+        c.subject,
+        c.body,
+        c.created_at,
+        u.name AS admin_name
+      FROM conversation_messages c
+      LEFT JOIN users u ON u.id = c.admin_user_id
+      WHERE c.investor_id = ${session.id}
+      ORDER BY c.created_at ASC
+    `,
+  ])
 
   await sql`
     UPDATE investor_messages
     SET is_read = TRUE
     WHERE investor_id = ${session.id} AND is_read = FALSE
   `
+  await sql`
+    UPDATE conversation_messages
+    SET read_by_investor_at = NOW()
+    WHERE investor_id = ${session.id}
+      AND sender_type = 'admin'
+      AND read_by_investor_at IS NULL
+  `
+
+  const announcements: AnnouncementItem[] = (announcementRows as { id: number; subject: string; body: string; created_at: Date }[]).map(
+    (row) => ({
+      id: row.id,
+      subject: row.subject,
+      body: row.body,
+      created_at: new Date(row.created_at).toISOString(),
+    }),
+  )
+
+  const conversation: ConversationItem[] = (
+    conversationRows as {
+      id: number
+      sender_type: string
+      subject: string | null
+      body: string
+      created_at: Date
+      admin_name: string | null
+    }[]
+  ).map((row) => ({
+    id: row.id,
+    sender_type: row.sender_type === "admin" ? "admin" : "investor",
+    subject: row.subject,
+    body: row.body,
+    admin_name: row.admin_name,
+    created_at: new Date(row.created_at).toISOString(),
+  }))
 
   return (
     <DashboardLayout user={session}>
       <div className="space-y-8">
         <div className="space-y-2">
           <h1 className="text-4xl font-bold text-balance">Messages</h1>
-          <p className="text-lg text-muted-foreground">Stay updated with account notifications</p>
+          <p className="text-lg text-muted-foreground">Stay updated and reach the PrivateEx team</p>
         </div>
 
-        {messages.length === 0 ? (
-          <div className="rounded-2xl border border-border bg-card/50 p-10 text-center">
-            <Mail className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
-            <h2 className="text-xl font-semibold">No messages yet</h2>
-            <p className="mt-2 text-muted-foreground">
-              You will see platform alerts, investment updates, and important notices here.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <article key={message.id} className="rounded-2xl border border-border bg-card/50 p-6">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-lg font-semibold">{message.subject}</h2>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(message.created_at).toLocaleString()}
-                  </span>
-                </div>
-                <div className="mt-3 space-y-3 text-sm text-muted-foreground">
-                  {String(message.body || "")
-                    .split(/\n\s*\n/)
-                    .map((paragraph: string, index: number) => (
-                      <p key={`${message.id}-p-${index}`}>{paragraph.trim()}</p>
-                    ))}
-                </div>
-              </article>
-            ))}
-          </div>
-        )}
+        <InvestorMessagesView announcements={announcements} conversation={conversation} />
       </div>
     </DashboardLayout>
   )
