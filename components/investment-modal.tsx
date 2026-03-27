@@ -109,6 +109,9 @@ export function InvestmentModal({
   const tax = subtotal * 0.02
   const totalAmount = subtotal + serviceFee + tax
   const hasInsufficientFunds = walletBalance !== null && totalAmount > walletBalance
+  const formatMoney = (value: number) =>
+    `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const stepIndex = step === "select" ? 1 : step === "details" ? 2 : 3
 
   const adjustShares = (delta: number) => {
     const newValue = shares + delta
@@ -286,6 +289,37 @@ export function InvestmentModal({
             </div>
           ) : (
             <div className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+                  <span>Step {stepIndex} of 3</span>
+                  <span>{step === "select" ? "Choose Quantity" : step === "details" ? "Investor Details" : "Review & Pay"}</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "select", label: "Quantity" },
+                    { id: "details", label: "Details" },
+                    { id: "summary", label: "Summary" },
+                  ].map((item, index) => {
+                    const current = stepIndex === index + 1
+                    const done = stepIndex > index + 1
+                    return (
+                      <div
+                        key={item.id}
+                        className={`rounded-md border px-3 py-2 text-center text-xs font-medium ${
+                          done
+                            ? "border-primary/40 bg-primary/10 text-primary"
+                            : current
+                              ? "border-primary/40 bg-primary/10 text-primary"
+                              : "border-border bg-background text-muted-foreground"
+                        }`}
+                      >
+                        {item.label}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
               {/* Wallet Balance */}
               <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
                 <div className="flex items-center gap-3">
@@ -302,8 +336,16 @@ export function InvestmentModal({
               {/* Company Info */}
               <div className="p-4 rounded-lg bg-card border border-border space-y-2">
                 <div className="flex justify-between">
+                  <span className="text-muted-foreground">Company:</span>
+                  <span className="font-semibold">{companyName}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type of Security:</span>
+                  <span className="font-semibold">Equity Share</span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-muted-foreground">Price per Share:</span>
-                  <span className="font-semibold">${pricePerShare.toFixed(2)}</span>
+                  <span className="font-semibold">{formatMoney(pricePerShare)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Available Shares:</span>
@@ -350,11 +392,11 @@ export function InvestmentModal({
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold">Total Amount:</span>
                   <span className={`text-3xl font-bold ${hasInsufficientFunds ? 'text-red-500' : 'text-primary'}`}>
-                    ${totalAmount.toFixed(2)}
+                    {formatMoney(totalAmount)}
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Subtotal ${subtotal.toFixed(2)} + Service Fee ${serviceFee.toFixed(2)} + Tax ${tax.toFixed(2)}
+                  Subtotal {formatMoney(subtotal)} + Service Fee {formatMoney(serviceFee)} + Tax {formatMoney(tax)}
                 </p>
                 {hasInsufficientFunds && (
                   <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
@@ -452,19 +494,58 @@ export function InvestmentModal({
               )}
 
               {step === "summary" && (
-                <div className="space-y-4 rounded-lg border border-border bg-card p-4">
-                  <h3 className="text-base font-semibold">Transaction Summary</h3>
-                  <div className="space-y-1 text-sm">
-                    <p><span className="text-muted-foreground">Company:</span> {companyName}</p>
-                    <p><span className="text-muted-foreground">Type of Security:</span> Equity Share</p>
-                    <p><span className="text-muted-foreground">Investor:</span> {investorName}</p>
-                    <p><span className="text-muted-foreground">ID/Passport:</span> {idPassport}</p>
-                    <p><span className="text-muted-foreground">Country:</span> {country}</p>
-                    <p><span className="text-muted-foreground">Shares:</span> {shares.toLocaleString()} @ ${pricePerShare.toFixed(2)}</p>
-                    <p><span className="text-muted-foreground">Subtotal:</span> ${subtotal.toFixed(2)}</p>
-                    <p><span className="text-muted-foreground">Service Fee:</span> ${serviceFee.toFixed(2)}</p>
-                    <p><span className="text-muted-foreground">Tax:</span> ${tax.toFixed(2)}</p>
-                    <p className="text-base font-semibold"><span className="text-muted-foreground">Total Due:</span> ${totalAmount.toFixed(2)}</p>
+                <div className="space-y-4 rounded-xl border border-border bg-card p-5">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-base font-semibold">Transaction Summary</h3>
+                    <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                      Ready to Pay
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-md border border-border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Company</p>
+                      <p className="mt-1 font-medium">{companyName}</p>
+                    </div>
+                    <div className="rounded-md border border-border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Type of Security</p>
+                      <p className="mt-1 font-medium">Equity Share</p>
+                    </div>
+                    <div className="rounded-md border border-border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Investor</p>
+                      <p className="mt-1 font-medium">{investorName}</p>
+                    </div>
+                    <div className="rounded-md border border-border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">ID / Passport</p>
+                      <p className="mt-1 font-medium">{idPassport}</p>
+                    </div>
+                    <div className="rounded-md border border-border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Country of Origin</p>
+                      <p className="mt-1 font-medium">{country}</p>
+                    </div>
+                    <div className="rounded-md border border-border bg-background p-3">
+                      <p className="text-xs text-muted-foreground">Shares</p>
+                      <p className="mt-1 font-medium">{shares.toLocaleString()} @ {formatMoney(pricePerShare)}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 rounded-md border border-border bg-background p-4 text-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="font-medium">{formatMoney(subtotal)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Service Fee</span>
+                      <span className="font-medium">{formatMoney(serviceFee)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span className="font-medium">{formatMoney(tax)}</span>
+                    </div>
+                    <div className="mt-2 border-t border-border pt-3 flex items-center justify-between">
+                      <span className="text-base font-semibold">Total Due</span>
+                      <span className="text-lg font-bold text-primary">{formatMoney(totalAmount)}</span>
+                    </div>
                   </div>
                   <div className="flex gap-3">
                     <button type="button" className={`${outlineButtonClass} flex-1`} onClick={() => setStep("details")}>
