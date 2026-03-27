@@ -5,7 +5,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { Shield, Globe, LineChart, ArrowLeft } from "lucide-react"
 
-type ViewType = "login" | "register" | "forgot-password"
+type ViewType = "login" | "register" | "forgot-password" | "force-password-change"
 
 function isStrongPassword(password: string) {
   const hasUppercase = /[A-Z]/.test(password)
@@ -31,6 +31,9 @@ export default function HomePage() {
 
   // Forgot password state
   const [forgotEmail, setForgotEmail] = useState("")
+  const [tempPassword, setTempPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmNewPassword, setConfirmNewPassword] = useState("")
 
   // Shared state
   const [error, setError] = useState("")
@@ -46,6 +49,9 @@ export default function HomePage() {
     setConfirmPassword("")
     setAgreedToTerms(false)
     setForgotEmail("")
+    setTempPassword("")
+    setNewPassword("")
+    setConfirmNewPassword("")
     setError("")
     setSuccess("")
   }
@@ -72,6 +78,17 @@ export default function HomePage() {
 
       if (!response.ok) {
         setError(data.error || "Login failed")
+        setLoading(false)
+        return
+      }
+
+      if (data.requirePasswordChange) {
+        setSuccess(data.message || "Please create a new password.")
+        setTempPassword(password)
+        if (data.email) {
+          setEmail(String(data.email))
+        }
+        setView("force-password-change")
         setLoading(false)
         return
       }
@@ -175,6 +192,52 @@ export default function HomePage() {
       setSuccess(data.message)
       setLoading(false)
     } catch (err) {
+      setError("An error occurred. Please try again.")
+      setLoading(false)
+    }
+  }
+
+  const handleCompletePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setSuccess("")
+    setLoading(true)
+
+    if (newPassword.length < 8 || !isStrongPassword(newPassword)) {
+      setError(
+        "New password must be at least 8 characters and include uppercase, lowercase, number, and special character.",
+      )
+      setLoading(false)
+      return
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setError("New passwords do not match.")
+      setLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch("/api/auth/complete-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          currentPassword: tempPassword,
+          newPassword,
+          confirmPassword: confirmNewPassword,
+        }),
+      })
+
+      const data = await response.json()
+      if (!response.ok) {
+        setError(data.error || "Could not update password.")
+        setLoading(false)
+        return
+      }
+
+      window.location.href = data.redirect || "/dashboard"
+    } catch {
       setError("An error occurred. Please try again.")
       setLoading(false)
     }
@@ -501,6 +564,87 @@ export default function HomePage() {
                     className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/50 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
                     {loading ? "Sending..." : "Send Reset Instructions"}
+                  </button>
+                </form>
+              </>
+            )}
+
+            {/* Forced Password Change Form */}
+            {view === "force-password-change" && (
+              <>
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-bold text-white">Create New Password</h2>
+                  <p className="text-slate-300">
+                    Your account was reset by admin. For security, set a new password to continue.
+                  </p>
+                </div>
+
+                <form onSubmit={handleCompletePasswordReset} className="space-y-4 w-full">
+                  {error && (
+                    <div className="p-3 text-sm text-red-200 bg-red-500/20 border border-red-500/30 rounded-lg">
+                      {error}
+                    </div>
+                  )}
+                  {success && (
+                    <div className="p-3 text-sm text-green-200 bg-green-500/20 border border-green-500/30 rounded-lg">
+                      {success}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label htmlFor="resetEmail" className="text-sm font-medium text-white">
+                      Email
+                    </label>
+                    <input
+                      id="resetEmail"
+                      type="email"
+                      value={email}
+                      disabled
+                      className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-slate-300"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="newPassword" className="text-sm font-medium text-white">
+                      New Password
+                    </label>
+                    <input
+                      id="newPassword"
+                      type="password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Min 8, Aa1@ required"
+                      minLength={8}
+                      required
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="confirmNewPassword" className="text-sm font-medium text-white">
+                      Confirm New Password
+                    </label>
+                    <input
+                      id="confirmNewPassword"
+                      type="password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                      required
+                      className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                    />
+                  </div>
+
+                  <p className="text-xs text-slate-400">
+                    Use at least 8 characters with uppercase, lowercase, number, and special character.
+                  </p>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/50 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    {loading ? "Updating..." : "Update Password and Continue"}
                   </button>
                 </form>
               </>

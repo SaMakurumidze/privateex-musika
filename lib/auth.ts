@@ -11,6 +11,7 @@ export interface Investor {
   address: string
   id_passport: string
   country: string
+  force_password_change?: boolean
 }
 
 export async function getSession(): Promise<Investor | null> {
@@ -94,6 +95,7 @@ export async function verifyCredentials(email: string, password: string) {
       address: investor.address,
       id_passport: investor.id_passport,
       country: investor.country,
+      force_password_change: Boolean(investor.force_password_change),
     }
   } catch (error) {
     console.error("Verify credentials DB/auth error:", {

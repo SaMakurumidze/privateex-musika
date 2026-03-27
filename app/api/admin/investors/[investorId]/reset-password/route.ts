@@ -12,13 +12,20 @@ export async function POST(
     const { investorId } = await params
     const sql = createSQLClient()
 
+    await sql`
+      ALTER TABLE investors
+      ADD COLUMN IF NOT EXISTS force_password_change BOOLEAN NOT NULL DEFAULT FALSE
+    `
+
     // Generate temporary password
     const tempPassword = `Temp${Math.random().toString(36).substring(2, 8).toUpperCase()}!`
     const hashedPassword = await bcrypt.hash(tempPassword, 10)
 
     await sql`
       UPDATE investors 
-      SET password = ${hashedPassword}
+      SET
+        password = ${hashedPassword},
+        force_password_change = TRUE
       WHERE id = ${investorId}
     `
 

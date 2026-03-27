@@ -50,6 +50,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 })
     }
 
+    if (investor.force_password_change) {
+      return NextResponse.json({
+        success: true,
+        requirePasswordChange: true,
+        email: investor.email,
+        message: "Temporary password accepted. Please create a new password to continue.",
+      })
+    }
+
     // Create session
     await createSession(investor.id)
 
