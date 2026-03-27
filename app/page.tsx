@@ -6,7 +6,14 @@ import Link from "next/link"
 import { Shield, Globe, LineChart, ArrowLeft } from "lucide-react"
 
 type ViewType = "login" | "register" | "forgot-password"
-const STRONG_PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/
+
+function isStrongPassword(password: string) {
+  const hasUppercase = /[A-Z]/.test(password)
+  const hasLowercase = /[a-z]/.test(password)
+  const hasNumber = /\d/.test(password)
+  const hasSpecial = /[^A-Za-z0-9\s]/.test(password)
+  return hasUppercase && hasLowercase && hasNumber && hasSpecial
+}
 
 export default function HomePage() {
   const [view, setView] = useState<ViewType>("login")
@@ -148,7 +155,7 @@ export default function HomePage() {
       return
     }
 
-    if (registerPassword.length < 8 || !STRONG_PASSWORD_REGEX.test(registerPassword)) {
+    if (registerPassword.length < 8 || !isStrongPassword(registerPassword)) {
       setError(
         "Password must be at least 8 characters and include uppercase, lowercase, number, and special character.",
       )
@@ -502,7 +509,6 @@ export default function HomePage() {
                         onChange={(e) => setRegisterPassword(e.target.value)}
                         placeholder="Min 8, Aa1@ required"
                         minLength={8}
-                        pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).{8,}"
                         title="Use at least 8 characters with uppercase, lowercase, number, and special character."
                         required
                         className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
