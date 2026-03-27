@@ -28,9 +28,6 @@ export default function HomePage() {
   const [registerPassword, setRegisterPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [profilePicture, setProfilePicture] = useState<File | null>(null)
-  const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null)
-  const [uploadingImage, setUploadingImage] = useState(false)
 
   // Forgot password state
   const [forgotEmail, setForgotEmail] = useState("")
@@ -48,59 +45,9 @@ export default function HomePage() {
     setRegisterPassword("")
     setConfirmPassword("")
     setAgreedToTerms(false)
-    setProfilePicture(null)
-    setProfilePicturePreview(null)
     setForgotEmail("")
     setError("")
     setSuccess("")
-  }
-
-  const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      // Validate file type
-      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
-      if (!allowedTypes.includes(file.type)) {
-        setError("Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.")
-        return
-      }
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError("File too large. Maximum size is 5MB.")
-        return
-      }
-      setProfilePicture(file)
-      setProfilePicturePreview(URL.createObjectURL(file))
-      setError("")
-    }
-  }
-
-  const uploadProfilePicture = async (): Promise<string | null> => {
-    if (!profilePicture) return null
-
-    setUploadingImage(true)
-    try {
-      const formData = new FormData()
-      formData.append("file", profilePicture)
-
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        // Don't throw - just return null so registration can continue
-        return null
-      }
-
-      return data.url
-    } catch {
-      return null
-    } finally {
-      setUploadingImage(false)
-    }
   }
 
   const handleViewChange = (newView: ViewType) => {
@@ -159,23 +106,11 @@ export default function HomePage() {
     setLoading(true)
 
     try {
-      // Upload profile picture if provided (optional - registration continues if upload fails)
-      let profilePictureUrl: string | null = null
-      if (profilePicture) {
-        try {
-          profilePictureUrl = await uploadProfilePicture()
-        } catch {
-          // Don't block registration if upload fails - it's optional
-          profilePictureUrl = null
-        }
-      }
-
       const requestBody = {
         full_name: fullName,
         email: registerEmail,
         password: registerPassword,
         confirm_password: confirmPassword,
-        profile_picture_url: profilePictureUrl,
       }
 
       let response: Response
@@ -406,54 +341,6 @@ export default function HomePage() {
                     </div>
                   )}
 
-                  {/* Profile Picture Upload */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-white">
-                      Profile Picture <span className="text-slate-400">(optional)</span>
-                    </label>
-                    <div className="flex items-center gap-4">
-                      <div className="h-16 w-16 rounded-full bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
-                        {profilePicturePreview ? (
-                          <img
-                            src={profilePicturePreview || "/placeholder.svg"}
-                            alt="Profile preview"
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <svg
-                            className="h-8 w-8 text-slate-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <input
-                          id="profilePicture"
-                          type="file"
-                          accept="image/jpeg,image/png,image/gif,image/webp"
-                          onChange={handleProfilePictureChange}
-                          className="hidden"
-                        />
-                        <label
-                          htmlFor="profilePicture"
-                          className="cursor-pointer inline-block px-3 py-1.5 text-sm bg-white/10 border border-white/20 rounded-lg text-white hover:bg-white/20 transition-colors"
-                        >
-                          {profilePicture ? "Change Photo" : "Upload Photo"}
-                        </label>
-                        <p className="text-xs text-slate-400 mt-1">JPEG, PNG, GIF or WebP (max 5MB)</p>
-                      </div>
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
                     <label htmlFor="fullName" className="text-sm font-medium text-white">
                       Full Name <span className="text-red-400">*</span>
@@ -557,10 +444,10 @@ export default function HomePage() {
 
                   <button
                     type="submit"
-                    disabled={loading || uploadingImage || !agreedToTerms}
+                    disabled={loading || !agreedToTerms}
                     className="w-full px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-600/50 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
-                    {uploadingImage ? "Uploading image..." : loading ? "Creating account..." : "Create Account"}
+                    {loading ? "Creating account..." : "Create Account"}
                   </button>
                 </form>
               </>

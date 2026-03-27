@@ -7,11 +7,19 @@ type Props = {
   userId: number
   initialPhone: string
   initialAddress: string
+  initialProfilePictureUrl: string
 }
 
-export function DashboardSettingsForm({ userId, initialPhone, initialAddress }: Props) {
+export function DashboardSettingsForm({
+  userId,
+  initialPhone,
+  initialAddress,
+  initialProfilePictureUrl,
+}: Props) {
   const [phone, setPhone] = useState(initialPhone)
   const [address, setAddress] = useState(initialAddress)
+  const [profilePictureUrl, setProfilePictureUrl] = useState(initialProfilePictureUrl)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
@@ -42,7 +50,7 @@ export function DashboardSettingsForm({ userId, initialPhone, initialAddress }: 
       const response = await fetch("/api/dashboard/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, address }),
+        body: JSON.stringify({ phone, address, profilePictureUrl }),
       })
 
       const data = await response.json()
@@ -59,6 +67,45 @@ export function DashboardSettingsForm({ userId, initialPhone, initialAddress }: 
     }
   }
 
+  const handleProfilePictureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if (!allowedTypes.includes(file.type)) {
+      setError("Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.")
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File too large. Maximum size is 5MB.")
+      return
+    }
+
+    setError("")
+    setSuccess("")
+    setIsUploadingImage(true)
+    try {
+      const formData = new FormData()
+      formData.append("file", file)
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+      const data = await response.json()
+      if (!response.ok || !data?.url) {
+        setError(data?.error || "Failed to upload profile picture.")
+        return
+      }
+      setProfilePictureUrl(data.url)
+      setSuccess("Profile picture uploaded. Click Save Profile to persist changes.")
+    } catch {
+      setError("Failed to upload profile picture.")
+    } finally {
+      setIsUploadingImage(false)
+      event.target.value = ""
+    }
+  }
+
   return (
     <div className="space-y-6">
       <form onSubmit={saveProfile} className="space-y-4 rounded-2xl border border-border bg-card/50 p-6">
@@ -66,6 +113,35 @@ export function DashboardSettingsForm({ userId, initialPhone, initialAddress }: 
 
         {error && <p className="rounded-md bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
         {success && <p className="rounded-md bg-emerald-500/10 p-3 text-sm text-emerald-300">{success}</p>}
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Profile Picture</label>
+          <div className="flex items-center gap-4">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
+              {profilePictureUrl ? (
+                <img src={profilePictureUrl} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-xs text-muted-foreground">No photo</span>
+              )}
+            </div>
+            <div className="space-y-1">
+              <input
+                id="settings-profile-picture"
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleProfilePictureChange}
+                className="hidden"
+              />
+              <label
+                htmlFor="settings-profile-picture"
+                className="inline-flex cursor-pointer rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
+                {isUploadingImage ? "Uploading..." : "Upload Photo"}
+              </label>
+              <p className="text-xs text-muted-foreground">JPEG, PNG, GIF or WebP (max 5MB)</p>
+            </div>
+          </div>
+        </div>
 
         <div className="space-y-2">
           <label htmlFor="phone" className="text-sm font-medium">
@@ -96,7 +172,7 @@ export function DashboardSettingsForm({ userId, initialPhone, initialAddress }: 
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || isUploadingImage}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
         >
           {loading ? "Saving..." : "Save Profile"}

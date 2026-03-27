@@ -13,6 +13,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const phone = typeof body.phone === "string" ? body.phone.trim() : ""
     const address = typeof body.address === "string" ? body.address.trim() : ""
+    const profilePictureUrl =
+      typeof body.profilePictureUrl === "string" ? body.profilePictureUrl.trim() : ""
 
     if (phone) {
       const cleanPhone = phone.replace(/[\s\-\(\)]/g, "")
@@ -30,7 +32,8 @@ export async function POST(request: NextRequest) {
       UPDATE investors
       SET
         phone = ${phone || null},
-        address = ${address || null}
+        address = ${address || null},
+        profile_picture_url = ${profilePictureUrl || null}
       WHERE id = ${session.id}
     `
 

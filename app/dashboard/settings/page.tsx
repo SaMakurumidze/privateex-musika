@@ -15,13 +15,13 @@ export default async function SettingsPage() {
 
   const sql = createSQLClient()
   const rows = await sql`
-    SELECT phone, address
+    SELECT phone, address, profile_picture_url
     FROM investors
     WHERE id = ${session.id}
     LIMIT 1
   `
 
-  const profile = rows[0] || { phone: "", address: "" }
+  const profile = rows[0] || { phone: "", address: "", profile_picture_url: "" }
 
   return (
     <DashboardLayout user={session}>
@@ -35,6 +35,7 @@ export default async function SettingsPage() {
           userId={session.id}
           initialPhone={profile.phone || ""}
           initialAddress={profile.address || ""}
+          initialProfilePictureUrl={profile.profile_picture_url || ""}
         />
       </div>
     </DashboardLayout>
