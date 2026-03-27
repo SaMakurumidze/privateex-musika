@@ -226,7 +226,7 @@ export function InvestmentModal({
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       <div className="fixed inset-0 bg-black/80" onClick={handleClose} />
-      <div className="relative bg-background border border-border rounded-xl shadow-lg max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="relative mx-4 w-full max-w-4xl overflow-hidden rounded-xl border border-border bg-background shadow-lg">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -320,119 +320,103 @@ export function InvestmentModal({
                 </div>
               </div>
 
-              {/* Wallet Balance */}
-              <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="flex items-center gap-3">
-                  <Wallet className="h-6 w-6 text-primary" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Your Wallet Balance</p>
-                    <p className="text-2xl font-bold text-primary">
-                      {walletLoading ? "Loading..." : walletBalance !== null ? `$${walletBalance.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "Unavailable"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Company Info */}
-              <div className="p-4 rounded-lg bg-card border border-border space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Company:</span>
-                  <span className="font-semibold">{companyName}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type of Security:</span>
-                  <span className="font-semibold">Equity Share</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Price per Share:</span>
-                  <span className="font-semibold">{formatMoney(pricePerShare)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Available Shares:</span>
-                  <span className="font-semibold">{availableShares.toLocaleString()}</span>
-                </div>
-              </div>
-
-              {/* Shares Selection */}
-              <div className="space-y-2">
-                <label htmlFor="shares" className="text-sm font-medium text-foreground">Number of Shares</label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className={`${outlineButtonClass} p-2`}
-                    onClick={() => adjustShares(-1)}
-                    aria-label="Decrease shares"
-                    title="Decrease shares"
-                  >
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <input
-                    id="shares"
-                    type="number"
-                    min="1"
-                    max={availableShares}
-                    value={shares}
-                    onChange={handleSharesChange}
-                    className={`${inputClass} text-center text-lg font-semibold`}
-                  />
-                  <button
-                    type="button"
-                    className={`${outlineButtonClass} p-2`}
-                    onClick={() => adjustShares(1)}
-                    aria-label="Increase shares"
-                    title="Increase shares"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Total Amount */}
-              <div className={`p-6 rounded-lg border-2 ${hasInsufficientFunds ? 'bg-red-500/10 border-red-500/30' : 'bg-primary/10 border-primary/20'}`}>
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">Total Amount:</span>
-                  <span className={`text-3xl font-bold ${hasInsufficientFunds ? 'text-red-500' : 'text-primary'}`}>
-                    {formatMoney(totalAmount)}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Subtotal {formatMoney(subtotal)} + Service Fee {formatMoney(serviceFee)} + Tax {formatMoney(tax)}
-                </p>
-                {hasInsufficientFunds && (
-                  <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
-                    <AlertCircle className="h-4 w-4" />
-                    Insufficient wallet balance
-                  </p>
-                )}
-              </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  {error}
-                </div>
-              )}
-
-              {/* Actions */}
               {step === "select" && (
-                <div className="flex gap-3">
-                  <button type="button" className={`${outlineButtonClass} flex-1`} onClick={handleClose}>
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setStep("details")}
-                    disabled={walletLoading || walletBalance === null || walletBalance <= 0}
-                    className={`${buttonClass} flex-1`}
-                  >
-                    {walletLoading ? "Loading..." : "Proceed"}
-                  </button>
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                      <SummaryRow label="Company" value={companyName} />
+                      <SummaryRow label="Security" value="Equity Share" />
+                      <SummaryRow label="Price / Share" value={formatMoney(pricePerShare)} />
+                      <SummaryRow label="Available Shares" value={availableShares.toLocaleString()} />
+                    </div>
+                    <div className="rounded-lg border border-primary/25 bg-primary/10 p-4">
+                      <div className="flex items-center gap-3">
+                        <Wallet className="h-6 w-6 text-primary" />
+                        <div>
+                          <p className="text-xs uppercase tracking-wide text-muted-foreground">Wallet Balance</p>
+                          <p className="text-2xl font-bold text-primary">
+                            {walletLoading
+                              ? "Loading..."
+                              : walletBalance !== null
+                                ? formatMoney(walletBalance)
+                                : "Unavailable"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="shares" className="text-sm font-medium text-foreground">
+                        Number of Shares
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className={`${outlineButtonClass} p-2`}
+                          onClick={() => adjustShares(-1)}
+                          aria-label="Decrease shares"
+                          title="Decrease shares"
+                        >
+                          <Minus className="h-4 w-4" />
+                        </button>
+                        <input
+                          id="shares"
+                          type="number"
+                          min="1"
+                          max={availableShares}
+                          value={shares}
+                          onChange={handleSharesChange}
+                          className={`${inputClass} text-center text-lg font-semibold`}
+                        />
+                        <button
+                          type="button"
+                          className={`${outlineButtonClass} p-2`}
+                          onClick={() => adjustShares(1)}
+                          aria-label="Increase shares"
+                          title="Increase shares"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className={`rounded-lg border-2 p-5 ${hasInsufficientFunds ? "border-red-500/30 bg-red-500/10" : "border-primary/20 bg-primary/10"}`}>
+                      <p className="text-sm text-muted-foreground">Estimated Total Due</p>
+                      <p className={`text-3xl font-bold ${hasInsufficientFunds ? "text-red-500" : "text-primary"}`}>
+                        {formatMoney(totalAmount)}
+                      </p>
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        Subtotal {formatMoney(subtotal)} + Service Fee {formatMoney(serviceFee)} + Tax {formatMoney(tax)}
+                      </p>
+                      {hasInsufficientFunds ? (
+                        <p className="mt-3 flex items-center gap-1 text-sm text-red-500">
+                          <AlertCircle className="h-4 w-4" />
+                          Insufficient wallet balance
+                        </p>
+                      ) : null}
+                    </div>
+                    <div className="flex gap-3">
+                      <button type="button" className={`${outlineButtonClass} flex-1`} onClick={handleClose}>
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setStep("details")}
+                        disabled={walletLoading || walletBalance === null || walletBalance <= 0}
+                        className={`${buttonClass} flex-1`}
+                      >
+                        {walletLoading ? "Loading..." : "Proceed"}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 
               {step === "details" && (
-                <div className="space-y-4">
+                <div className="space-y-4 rounded-lg border border-border bg-card p-5">
+                  <p className="text-sm text-muted-foreground">
+                    Enter your required identity details to continue to payment review.
+                  </p>
                   <div className="space-y-2">
                     <label htmlFor="id-passport" className="text-sm font-medium">National ID / Passport Number</label>
                     <input
@@ -479,7 +463,7 @@ export function InvestmentModal({
                   </div>
                   <div className="flex gap-3">
                     <button type="button" className={`${outlineButtonClass} flex-1`} onClick={() => setStep("select")}>
-                      Cancel
+                      Back
                     </button>
                     <button
                       type="button"
@@ -549,7 +533,7 @@ export function InvestmentModal({
                   </div>
                   <div className="flex gap-3">
                     <button type="button" className={`${outlineButtonClass} flex-1`} onClick={() => setStep("details")}>
-                      Cancel
+                      Back
                     </button>
                     <button
                       onClick={handlePurchase}
@@ -562,6 +546,14 @@ export function InvestmentModal({
                   </div>
                 </div>
               )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-500 text-sm flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -570,4 +562,13 @@ export function InvestmentModal({
   )
 
   return createPortal(modalContent, document.body)
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <span className="text-muted-foreground">{label}:</span>
+      <span className="font-semibold text-foreground">{value}</span>
+    </div>
+  )
 }
