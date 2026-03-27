@@ -21,29 +21,20 @@ export async function POST(request: NextRequest) {
       email: rawEmail,
       password,
       confirm_password,
-      id_passport,
-      phone,
-      country,
-      address,
       profile_picture_url,
     } = body
     const email = typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : ""
 
     const normalizedFullName = typeof full_name === "string" ? full_name.trim() : ""
-    const normalizedIdPassport = typeof id_passport === "string" ? id_passport.trim() : ""
-    const normalizedCountry = typeof country === "string" ? country.trim() : ""
-    const normalizedAddress = typeof address === "string" ? address.trim() : ""
+    const placeholderIdPassport = `PENDING-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
 
     // Required field validation
-    if (!normalizedFullName || !email || !password || !confirm_password || !normalizedIdPassport || !phone || !normalizedCountry) {
+    if (!normalizedFullName || !email || !password || !confirm_password) {
       const missingFields = []
       if (!normalizedFullName) missingFields.push("full_name")
       if (!email) missingFields.push("email")
       if (!password) missingFields.push("password")
       if (!confirm_password) missingFields.push("confirm_password")
-      if (!normalizedIdPassport) missingFields.push("id_passport")
-      if (!phone) missingFields.push("phone")
-      if (!normalizedCountry) missingFields.push("country")
       return NextResponse.json({ error: `Please fill in all required fields: ${missingFields.join(", ")}` }, { status: 400 })
     }
 
@@ -77,25 +68,6 @@ export async function POST(request: NextRequest) {
     // Password match validation
     if (password !== confirm_password) {
       return NextResponse.json({ error: "Passwords do not match" }, { status: 400 })
-    }
-
-    // ID/Passport validation (alphanumeric, 6-20 characters)
-    const idPassportRegex = /^[A-Za-z0-9-]{6,20}$/
-    if (!idPassportRegex.test(normalizedIdPassport)) {
-      return NextResponse.json(
-        { error: "Invalid ID/Passport number. Must be 6-20 alphanumeric characters." },
-        { status: 400 }
-      )
-    }
-
-    // Phone number validation (basic international format)
-    const phoneRegex = /^\+?[0-9]{7,15}$/
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, "")
-    if (!phoneRegex.test(cleanPhone)) {
-      return NextResponse.json(
-        { error: "Invalid phone number. Please enter a valid phone number with country code." },
-        { status: 400 }
-      )
     }
 
     // Create SQL client after all validations pass
@@ -132,15 +104,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Email address already registered" }, { status: 400 })
     }
 
-    // Check if ID/Passport already exists
-    const existingIdPassport = await sql`
-      SELECT id FROM investors WHERE id_passport = ${normalizedIdPassport}
-    `
-
-    if (existingIdPassport.length > 0) {
-      return NextResponse.json({ error: "ID/Passport number already registered" }, { status: 400 })
-    }
-
     // Hash password and generate verification token
     const hashedPassword = await bcrypt.hash(password, 10)
     const profilePicUrl = profile_picture_url || null
@@ -166,10 +129,10 @@ export async function POST(request: NextRequest) {
         ${normalizedFullName}, 
         ${email}, 
         ${hashedPassword}, 
-        ${normalizedIdPassport}, 
-        ${cleanPhone}, 
-        ${normalizedCountry}, 
-        ${normalizedAddress || null},
+        ${placeholderIdPassport}, 
+        ${null}, 
+        ${null}, 
+        ${null},
         'Angel Investor',
         ${profilePicUrl},
         FALSE,

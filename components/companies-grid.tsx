@@ -24,6 +24,7 @@ export interface Company {
 
 interface CompaniesGridProps {
   companies: Company[]
+  investorName: string
 }
 
 const logoGradients = [
@@ -79,7 +80,7 @@ function makeFallbackLogoDataUri(company: Company, initials: string) {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
 }
 
-export function CompaniesGrid({ companies }: CompaniesGridProps) {
+export function CompaniesGrid({ companies, investorName }: CompaniesGridProps) {
   if (companies.length === 0) {
     return (
       <div className="text-center py-12">
@@ -93,13 +94,13 @@ export function CompaniesGrid({ companies }: CompaniesGridProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {companies.map((company) => (
-        <CompanyCard key={company.id} company={company} />
+        <CompanyCard key={company.id} company={company} investorName={investorName} />
       ))}
     </div>
   )
 }
 
-function CompanyCard({ company }: { company: Company }) {
+function CompanyCard({ company, investorName }: { company: Company; investorName: string }) {
   const pricePerShare = Number.parseFloat(company.price_per_share)
   const initials = getCompanyInitials(company.company_name)
   const gradient = getGradientByCompany(company)
@@ -184,6 +185,7 @@ function CompanyCard({ company }: { company: Company }) {
       <InvestButton
         companyId={company.company_id}
         companyName={company.company_name}
+        investorName={investorName}
         pricePerShare={pricePerShare}
         availableShares={company.available_shares}
       />

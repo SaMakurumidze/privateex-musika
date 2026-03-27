@@ -3,6 +3,9 @@ import { getSession } from "@/lib/auth"
 import { createSQLClient } from "@/lib/db"
 import { assertCompanyId, assertPositiveNumber } from "@/lib/input-safety"
 
+const SERVICE_FEE_RATE = 0.015
+const TAX_RATE = 0.02
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
@@ -12,16 +15,53 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { companyId: rawCompanyId, shares, pricePerShare } = body
+    const {
+      companyId: rawCompanyId,
+      shares,
+      pricePerShare,
+      idPassport,
+      phone,
+      country,
+      address,
+    } = body
     const companyId = assertCompanyId(rawCompanyId)
 
     if (!companyId || !shares || shares < 1 || !pricePerShare) {
       return NextResponse.json({ error: "Invalid purchase data" }, { status: 400 })
     }
 
+    const normalizedIdPassport = typeof idPassport === "string" ? idPassport.trim() : ""
+    const normalizedPhone = typeof phone === "string" ? phone.trim() : ""
+    const normalizedCountry = typeof country === "string" ? country.trim() : ""
+    const normalizedAddress = typeof address === "string" ? address.trim() : ""
+
+    if (!normalizedIdPassport || !normalizedPhone || !normalizedCountry || !normalizedAddress) {
+      return NextResponse.json({ error: "Please complete all required identity fields." }, { status: 400 })
+    }
+
+    const idPassportRegex = /^[A-Za-z0-9-]{6,20}$/
+    if (!idPassportRegex.test(normalizedIdPassport)) {
+      return NextResponse.json(
+        { error: "Invalid ID/Passport number. Must be 6-20 alphanumeric characters." },
+        { status: 400 },
+      )
+    }
+
+    const cleanPhone = normalizedPhone.replace(/[\s\-\(\)]/g, "")
+    const phoneRegex = /^\+?[0-9]{7,15}$/
+    if (!phoneRegex.test(cleanPhone)) {
+      return NextResponse.json(
+        { error: "Invalid phone number. Please enter a valid phone number with country code." },
+        { status: 400 },
+      )
+    }
+
     const numShares = assertPositiveNumber(shares, "share quantity")
     const numPrice = assertPositiveNumber(pricePerShare, "price per share")
-    const totalAmount = numShares * numPrice
+    const subtotal = numShares * numPrice
+    const serviceFee = subtotal * SERVICE_FEE_RATE
+    const tax = subtotal * TAX_RATE
+    const totalAmount = subtotal + serviceFee + tax
 
     const sql = createSQLClient()
 
@@ -48,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Check company shares
     const companyRows = await sql`
-      SELECT available_shares, company_name, registration_number, country_of_incorporation, share_class
+      SELECT available_shares, company_name, registration_number, country_of_incorporation, share_class, security_type
       FROM companies WHERE company_id = ${companyId}
     `
     const company = companyRows[0]
@@ -60,6 +100,17 @@ export async function POST(request: NextRequest) {
     if (company.available_shares < numShares) {
       return NextResponse.json({ error: "Not enough shares available" }, { status: 400 })
     }
+
+    // Step 2.5: Persist KYC profile details collected in checkout flow.
+    await sql`
+      UPDATE investors
+      SET
+        id_passport = ${normalizedIdPassport},
+        phone = ${cleanPhone},
+        country = ${normalizedCountry},
+        address = ${normalizedAddress}
+      WHERE id = ${session.id}
+    `
 
     // Step 3: Deduct wallet balance
     await sql`
@@ -103,9 +154,9 @@ export async function POST(request: NextRequest) {
         share_class, shares_issued, price_per_share, total_amount
       ) VALUES (
         ${certNumber}, ${transactionId},
-        ${session.id}, ${investor?.full_name || 'Investor'}, ${investor?.id_passport || ''},
+        ${session.id}, ${investor?.full_name || "Investor"}, ${normalizedIdPassport},
         ${companyId}, ${company.company_name}, ${company.registration_number || ''}, ${company.country_of_incorporation || ''},
-        ${company.share_class || 'Ordinary'}, ${numShares}, ${numPrice}, ${totalAmount}
+        ${company.security_type || company.share_class || "Ordinary"}, ${numShares}, ${numPrice}, ${totalAmount}
       )
     `
 
@@ -123,6 +174,12 @@ export async function POST(request: NextRequest) {
       newBalance: Number.parseFloat(updatedWallet?.balance || "0"),
       investorName: investor?.full_name || "Investor",
       investorEmail: investor?.email || "",
+      pricing: {
+        subtotal,
+        serviceFee,
+        tax,
+        totalAmount,
+      },
     })
   } catch (error) {
     console.error("Purchase error:", error)

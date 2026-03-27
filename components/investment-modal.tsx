@@ -11,6 +11,7 @@ interface InvestmentModalProps {
   onClose: () => void
   companyId: string
   companyName: string
+  investorName: string
   pricePerShare: number
   availableShares: number
 }
@@ -20,6 +21,7 @@ export function InvestmentModal({
   onClose,
   companyId,
   companyName,
+  investorName,
   pricePerShare,
   availableShares,
 }: InvestmentModalProps) {
@@ -34,6 +36,11 @@ export function InvestmentModal({
   const [certificateNumber, setCertificateNumber] = useState<string | null>(null)
   const [isEmailing, setIsEmailing] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
+  const [step, setStep] = useState<"select" | "details" | "summary">("select")
+  const [idPassport, setIdPassport] = useState("")
+  const [phone, setPhone] = useState("")
+  const [country, setCountry] = useState("")
+  const [address, setAddress] = useState("")
 
   useEffect(() => {
     setMounted(true)
@@ -52,6 +59,11 @@ export function InvestmentModal({
       setCertificateNumber(null)
       setIsEmailing(false)
       setEmailSent(false)
+      setStep("select")
+      setIdPassport("")
+      setPhone("")
+      setCountry("")
+      setAddress("")
       // Fetch fresh wallet balance
       fetchWalletBalance()
     }
@@ -92,7 +104,10 @@ export function InvestmentModal({
     }
   }
 
-  const totalAmount = shares * pricePerShare
+  const subtotal = shares * pricePerShare
+  const serviceFee = subtotal * 0.015
+  const tax = subtotal * 0.02
+  const totalAmount = subtotal + serviceFee + tax
   const hasInsufficientFunds = walletBalance !== null && totalAmount > walletBalance
 
   const adjustShares = (delta: number) => {
@@ -128,9 +143,12 @@ export function InvestmentModal({
         },
         body: JSON.stringify({
           companyId,
-          companyName,
           shares,
           pricePerShare,
+          idPassport,
+          phone,
+          country,
+          address,
         }),
       })
 
@@ -183,6 +201,11 @@ export function InvestmentModal({
     setCertificateNumber(null)
     setIsEmailing(false)
     setEmailSent(false)
+    setStep("select")
+    setIdPassport("")
+    setPhone("")
+    setCountry("")
+    setAddress("")
     onClose()
   }
 
@@ -191,6 +214,11 @@ export function InvestmentModal({
   const inputClass = "w-full px-3 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
   const buttonClass = "px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
   const outlineButtonClass = "px-4 py-2 bg-transparent border border-border text-foreground font-medium rounded-lg hover:bg-accent transition-colors"
+  const hasRequiredDetails =
+    idPassport.trim().length > 0 &&
+    phone.trim().length > 0 &&
+    country.trim().length > 0 &&
+    address.trim().length > 0
 
   const modalContent = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
@@ -202,7 +230,12 @@ export function InvestmentModal({
               <h2 className="text-2xl font-semibold">Purchase Shares</h2>
               <p className="text-muted-foreground">Invest in {companyName}</p>
             </div>
-            <button onClick={handleClose} className="p-2 hover:bg-accent rounded-lg transition-colors">
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-accent rounded-lg transition-colors"
+              aria-label="Close purchase modal"
+              title="Close"
+            >
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -282,7 +315,13 @@ export function InvestmentModal({
               <div className="space-y-2">
                 <label htmlFor="shares" className="text-sm font-medium text-foreground">Number of Shares</label>
                 <div className="flex items-center gap-2">
-                  <button type="button" className={`${outlineButtonClass} p-2`} onClick={() => adjustShares(-1)}>
+                  <button
+                    type="button"
+                    className={`${outlineButtonClass} p-2`}
+                    onClick={() => adjustShares(-1)}
+                    aria-label="Decrease shares"
+                    title="Decrease shares"
+                  >
                     <Minus className="h-4 w-4" />
                   </button>
                   <input
@@ -294,7 +333,13 @@ export function InvestmentModal({
                     onChange={handleSharesChange}
                     className={`${inputClass} text-center text-lg font-semibold`}
                   />
-                  <button type="button" className={`${outlineButtonClass} p-2`} onClick={() => adjustShares(1)}>
+                  <button
+                    type="button"
+                    className={`${outlineButtonClass} p-2`}
+                    onClick={() => adjustShares(1)}
+                    aria-label="Increase shares"
+                    title="Increase shares"
+                  >
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
@@ -308,6 +353,9 @@ export function InvestmentModal({
                     ${totalAmount.toFixed(2)}
                   </span>
                 </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Subtotal ${subtotal.toFixed(2)} + Service Fee ${serviceFee.toFixed(2)} + Tax ${tax.toFixed(2)}
+                </p>
                 {hasInsufficientFunds && (
                   <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
                     <AlertCircle className="h-4 w-4" />
@@ -325,19 +373,114 @@ export function InvestmentModal({
               )}
 
               {/* Actions */}
-              <div className="flex gap-3">
-                <button type="button" className={`${outlineButtonClass} flex-1`} onClick={handleClose}>
-                  Cancel
-                </button>
-                <button 
-                  onClick={handlePurchase} 
-                  disabled={isProcessing || hasInsufficientFunds || walletLoading || walletBalance === null || walletBalance <= 0}
-                  className={`${buttonClass} flex-1 flex items-center justify-center gap-2`}
-                >
-                  <Wallet className="h-5 w-5" />
-                  {walletLoading ? "Loading..." : isProcessing ? "Processing..." : "Pay with Wallet"}
-                </button>
-              </div>
+              {step === "select" && (
+                <div className="flex gap-3">
+                  <button type="button" className={`${outlineButtonClass} flex-1`} onClick={handleClose}>
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep("details")}
+                    disabled={walletLoading || walletBalance === null || walletBalance <= 0}
+                    className={`${buttonClass} flex-1`}
+                  >
+                    {walletLoading ? "Loading..." : "Proceed"}
+                  </button>
+                </div>
+              )}
+
+              {step === "details" && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label htmlFor="id-passport" className="text-sm font-medium">National ID / Passport Number</label>
+                    <input
+                      id="id-passport"
+                      type="text"
+                      value={idPassport}
+                      onChange={(e) => setIdPassport(e.target.value)}
+                      className={inputClass}
+                      placeholder="Enter ID or Passport number"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="phone" className="text-sm font-medium">Phone Number</label>
+                    <input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className={inputClass}
+                      placeholder="+263..."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="country" className="text-sm font-medium">Country of Origin</label>
+                    <input
+                      id="country"
+                      type="text"
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className={inputClass}
+                      placeholder="Enter country"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label htmlFor="address" className="text-sm font-medium">Residential Address</label>
+                    <textarea
+                      id="address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      className={inputClass}
+                      placeholder="Enter residential address"
+                      rows={2}
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" className={`${outlineButtonClass} flex-1`} onClick={() => setStep("select")}>
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setStep("summary")}
+                      disabled={!hasRequiredDetails}
+                      className={`${buttonClass} flex-1`}
+                    >
+                      Confirm
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {step === "summary" && (
+                <div className="space-y-4 rounded-lg border border-border bg-card p-4">
+                  <h3 className="text-base font-semibold">Transaction Summary</h3>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="text-muted-foreground">Company:</span> {companyName}</p>
+                    <p><span className="text-muted-foreground">Type of Security:</span> Equity Share</p>
+                    <p><span className="text-muted-foreground">Investor:</span> {investorName}</p>
+                    <p><span className="text-muted-foreground">ID/Passport:</span> {idPassport}</p>
+                    <p><span className="text-muted-foreground">Country:</span> {country}</p>
+                    <p><span className="text-muted-foreground">Shares:</span> {shares.toLocaleString()} @ ${pricePerShare.toFixed(2)}</p>
+                    <p><span className="text-muted-foreground">Subtotal:</span> ${subtotal.toFixed(2)}</p>
+                    <p><span className="text-muted-foreground">Service Fee:</span> ${serviceFee.toFixed(2)}</p>
+                    <p><span className="text-muted-foreground">Tax:</span> ${tax.toFixed(2)}</p>
+                    <p className="text-base font-semibold"><span className="text-muted-foreground">Total Due:</span> ${totalAmount.toFixed(2)}</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <button type="button" className={`${outlineButtonClass} flex-1`} onClick={() => setStep("details")}>
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handlePurchase}
+                      disabled={isProcessing || hasInsufficientFunds || walletLoading || walletBalance === null || walletBalance <= 0}
+                      className={`${buttonClass} flex-1 flex items-center justify-center gap-2`}
+                    >
+                      <Wallet className="h-5 w-5" />
+                      {walletLoading ? "Loading..." : isProcessing ? "Processing..." : "Pay with Wallet"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

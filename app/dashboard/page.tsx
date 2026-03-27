@@ -84,7 +84,7 @@ export default async function DashboardPage() {
           totalShares={Number(summary.total_shares)}
         />
 
-        <CompaniesGrid companies={companies as Company[]} />
+        <CompaniesGrid companies={companies as Company[]} investorName={session.full_name} />
       </div>
     </DashboardLayout>
   )

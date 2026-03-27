@@ -8,11 +8,12 @@ import { InvestmentModal } from "./investment-modal"
 interface InvestButtonProps {
   companyId: string
   companyName: string
+  investorName: string
   pricePerShare: number
   availableShares: number
 }
 
-export function InvestButton({ companyId, companyName, pricePerShare, availableShares }: InvestButtonProps) {
+export function InvestButton({ companyId, companyName, investorName, pricePerShare, availableShares }: InvestButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
@@ -27,6 +28,7 @@ export function InvestButton({ companyId, companyName, pricePerShare, availableS
         onClose={() => setIsModalOpen(false)}
         companyId={companyId}
         companyName={companyName}
+        investorName={investorName}
         pricePerShare={pricePerShare}
         availableShares={availableShares}
       />
