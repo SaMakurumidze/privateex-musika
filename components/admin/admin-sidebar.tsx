@@ -10,6 +10,7 @@ import {
   Wallet,
   BarChart3,
   History,
+  FileText,
   LogOut,
   ChevronRight,
 } from "lucide-react"
@@ -65,6 +66,12 @@ const navItems = [
     label: "Transactions",
     href: "/admin/dashboard/transactions",
     icon: History,
+    permission: "analytics:view" as Permission,
+  },
+  {
+    label: "Accounting",
+    href: "/admin/dashboard/accounting",
+    icon: FileText,
     permission: "analytics:view" as Permission,
   },
 ]

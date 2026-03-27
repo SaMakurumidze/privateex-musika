@@ -65,6 +65,26 @@ export async function POST(request: NextRequest) {
 
     const sql = createSQLClient()
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS purchase_charge_audit (
+        id SERIAL PRIMARY KEY,
+        transaction_id VARCHAR(120) NOT NULL UNIQUE,
+        investor_id INTEGER NOT NULL REFERENCES investors(id) ON DELETE CASCADE,
+        investor_name VARCHAR(255) NOT NULL,
+        investor_email VARCHAR(255),
+        company_id VARCHAR(40) NOT NULL,
+        company_name VARCHAR(255) NOT NULL,
+        shares_purchased NUMERIC(18, 6) NOT NULL,
+        price_per_share NUMERIC(18, 6) NOT NULL,
+        subtotal NUMERIC(18, 2) NOT NULL,
+        service_fee NUMERIC(18, 2) NOT NULL,
+        tax NUMERIC(18, 2) NOT NULL,
+        total_amount NUMERIC(18, 2) NOT NULL,
+        payment_method VARCHAR(40) NOT NULL DEFAULT 'Wallet',
+        charged_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `
+
     // Generate IDs upfront
     const transactionId = `TXN-${session.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
     const certNumber = `CERT-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
@@ -160,7 +180,41 @@ export async function POST(request: NextRequest) {
       )
     `
 
-    // Step 8: Read back new balance
+    // Step 8: Persist accounting audit trail for fee/tax charges.
+    await sql`
+      INSERT INTO purchase_charge_audit (
+        transaction_id,
+        investor_id,
+        investor_name,
+        investor_email,
+        company_id,
+        company_name,
+        shares_purchased,
+        price_per_share,
+        subtotal,
+        service_fee,
+        tax,
+        total_amount,
+        payment_method
+      ) VALUES (
+        ${transactionId},
+        ${session.id},
+        ${investor?.full_name || "Investor"},
+        ${investor?.email || null},
+        ${companyId},
+        ${company.company_name},
+        ${numShares},
+        ${numPrice},
+        ${subtotal},
+        ${serviceFee},
+        ${tax},
+        ${totalAmount},
+        'Wallet'
+      )
+      ON CONFLICT (transaction_id) DO NOTHING
+    `
+
+    // Step 9: Read back new balance
     const updatedWalletRows = await sql`
       SELECT balance FROM wallets WHERE investor_id = ${session.id}
     `
