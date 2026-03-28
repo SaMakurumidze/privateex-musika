@@ -37,7 +37,7 @@ export function LoginForm() {
       }
 
       router.push(data.redirect)
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       setLoading(false)
     }

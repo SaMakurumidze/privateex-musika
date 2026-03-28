@@ -27,11 +27,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
     setTheme(resolvedTheme)
   }, [setTheme, user.id])
 
-  useEffect(() => {
-    if (pathname === "/dashboard/messages") {
-      setUnreadMessages(0)
-    }
-  }, [pathname])
+  const displayedUnread = pathname === "/dashboard/messages" ? 0 : unreadMessages
 
   useEffect(() => {
     let active = true
@@ -98,11 +94,11 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
               title="Open messages"
             >
               <Mail className="h-5 w-5" />
-              {unreadMessages > 0 ? (
+              {displayedUnread > 0 ? (
                 <>
                   <span className="absolute right-1.5 top-1.5 h-2.5 w-2.5 rounded-full bg-primary" />
                   <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold leading-none text-primary-foreground">
-                    {unreadMessages > 99 ? "99+" : unreadMessages}
+                    {displayedUnread > 99 ? "99+" : displayedUnread}
                   </span>
                 </>
               ) : null}
@@ -150,7 +146,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
                 <MobileNavLink
                   href="/dashboard/messages"
                   icon={Mail}
-                  badgeCount={unreadMessages}
+                  badgeCount={displayedUnread}
                   onNavigate={() => setMobileMenuOpen(false)}
                 >
                   Messages
@@ -191,7 +187,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             <NavLink href="/dashboard/transactions" icon={History}>
               Transactions
             </NavLink>
-            <NavLink href="/dashboard/messages" icon={Mail} badgeCount={unreadMessages}>
+            <NavLink href="/dashboard/messages" icon={Mail} badgeCount={displayedUnread}>
               Messages
             </NavLink>
           </div>

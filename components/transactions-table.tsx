@@ -29,7 +29,7 @@ export function TransactionsTable({ transactions }: TransactionsTableProps) {
           <div className="space-y-2">
             <h3 className="text-2xl font-bold text-foreground">No Transactions Yet</h3>
             <p className="text-muted-foreground">
-              You haven't made any investments yet. Start building your portfolio today!
+              You haven&apos;t made any investments yet. Start building your portfolio today!
             </p>
           </div>
           <Button asChild size="lg" className="gap-2">

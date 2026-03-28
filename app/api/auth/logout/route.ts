@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     response.cookies.delete("role")
 
     return response
-  } catch (error) {
+  } catch {
     // Even on error, redirect to login page
     const response = NextResponse.redirect(redirectUrl, 303)
     response.cookies.delete("session")

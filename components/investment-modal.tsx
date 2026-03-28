@@ -41,33 +41,12 @@ export function InvestmentModal({
   const [phone, setPhone] = useState("")
   const [country, setCountry] = useState("")
   const [address, setAddress] = useState("")
+  const [detailsPrefilledFromDb, setDetailsPrefilledFromDb] = useState(false)
 
   useEffect(() => {
     setMounted(true)
     return () => setMounted(false)
   }, [])
-
-  // Reset and fetch wallet balance when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      // Reset state when modal opens
-      setWalletBalance(null)
-      setWalletLoading(false)
-      setError("")
-      setSuccess("")
-      setShares(1)
-      setCertificateNumber(null)
-      setIsEmailing(false)
-      setEmailSent(false)
-      setStep("select")
-      setIdPassport("")
-      setPhone("")
-      setCountry("")
-      setAddress("")
-      // Fetch fresh wallet balance
-      fetchWalletBalance()
-    }
-  }, [isOpen])
 
   const fetchWalletBalance = async () => {
     setWalletLoading(true)
@@ -103,6 +82,65 @@ export function InvestmentModal({
       setWalletLoading(false)
     }
   }
+
+  const fetchCheckoutProfile = async () => {
+    try {
+      const response = await fetch("/api/purchase/checkout-profile", {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+      })
+      if (!response.ok) return
+      const data = (await response.json()) as {
+        idPassport?: string
+        phone?: string
+        country?: string
+        address?: string
+      }
+      let applied = false
+      if (typeof data.idPassport === "string" && data.idPassport.trim()) {
+        setIdPassport(data.idPassport.trim())
+        applied = true
+      }
+      if (typeof data.phone === "string" && data.phone.trim()) {
+        setPhone(data.phone.trim())
+        applied = true
+      }
+      if (typeof data.country === "string" && data.country.trim()) {
+        setCountry(data.country.trim())
+        applied = true
+      }
+      if (typeof data.address === "string" && data.address.trim()) {
+        setAddress(data.address.trim())
+        applied = true
+      }
+      setDetailsPrefilledFromDb(applied)
+    } catch {
+      // User can still enter details manually
+    }
+  }
+
+  // Reset and load wallet + saved KYC when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setWalletBalance(null)
+      setWalletLoading(false)
+      setError("")
+      setSuccess("")
+      setShares(1)
+      setCertificateNumber(null)
+      setIsEmailing(false)
+      setEmailSent(false)
+      setStep("select")
+      setIdPassport("")
+      setPhone("")
+      setCountry("")
+      setAddress("")
+      setDetailsPrefilledFromDb(false)
+      void fetchWalletBalance()
+      void fetchCheckoutProfile()
+    }
+  }, [isOpen])
 
   const subtotal = shares * pricePerShare
   const serviceFee = subtotal * 0.015
@@ -164,7 +202,7 @@ export function InvestmentModal({
       } else {
         setError(data.error || "Purchase failed")
       }
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
     } finally {
       setIsProcessing(false)
@@ -209,6 +247,7 @@ export function InvestmentModal({
     setPhone("")
     setCountry("")
     setAddress("")
+    setDetailsPrefilledFromDb(false)
     onClose()
   }
 
@@ -417,6 +456,11 @@ export function InvestmentModal({
                   <p className="text-sm text-muted-foreground">
                     Enter your required identity details to continue to payment review.
                   </p>
+                  {detailsPrefilledFromDb && (
+                    <p className="text-sm text-primary/90">
+                      Saved details from your account or last purchase are filled in below. You can edit them if needed.
+                    </p>
+                  )}
                   <div className="space-y-2">
                     <label htmlFor="id-passport" className="text-sm font-medium">National ID / Passport Number</label>
                     <input

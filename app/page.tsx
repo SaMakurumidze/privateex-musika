@@ -94,7 +94,7 @@ export default function HomePage() {
       }
 
       window.location.href = data.redirect
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       setLoading(false)
     }
@@ -191,7 +191,7 @@ export default function HomePage() {
 
       setSuccess(data.message)
       setLoading(false)
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       setLoading(false)
     }

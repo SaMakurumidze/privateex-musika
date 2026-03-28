@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     response.cookies.delete("admin_role")
     
     return response
-  } catch (error) {
+  } catch {
     const response = NextResponse.redirect(redirectUrl, 303)
     response.cookies.delete("admin_session")
     response.cookies.delete("admin_role")

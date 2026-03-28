@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Message must be at most ${MAX_BODY} characters.` }, { status: 400 })
     }
 
-    let subject = subjectRaw || "Message to PrivateEx Team"
+    const subject = subjectRaw || "Message to PrivateEx Team"
     if (subject.length > MAX_SUBJECT) {
       return NextResponse.json({ error: "Subject is too long." }, { status: 400 })
     }

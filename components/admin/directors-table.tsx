@@ -53,7 +53,7 @@ export function DirectorsTable({ directors, permissions }: DirectorsTableProps) 
       }
 
       router.refresh()
-    } catch (err) {
+    } catch {
       setError("An error occurred")
     } finally {
       setLoading(null)

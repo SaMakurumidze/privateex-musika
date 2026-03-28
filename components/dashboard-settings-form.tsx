@@ -119,6 +119,7 @@ export function DashboardSettingsForm({
           <div className="flex items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border border-border bg-background">
               {profilePictureUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- arbitrary uploaded / blob URLs
                 <img src={profilePictureUrl} alt="Profile" className="h-full w-full object-cover" />
               ) : (
                 <span className="text-xs text-muted-foreground">No photo</span>

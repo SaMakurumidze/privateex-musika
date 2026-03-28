@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useSyncExternalStore } from "react"
 import { useTheme } from "next-themes"
 import {
   Shield,
@@ -91,11 +91,11 @@ const navItems = [
 export function AdminSidebar({ admin, permissions }: AdminSidebarProps) {
   const pathname = usePathname()
   const { setTheme, resolvedTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  )
 
   const getRoleBadgeColor = (role: AdminRole) => {
     switch (role) {

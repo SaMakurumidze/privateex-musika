@@ -113,6 +113,8 @@ function CompanyCard({ company, investorName }: { company: Company; investorName
 
       <div className="flex items-start gap-4 mb-4">
         <div className={`relative h-14 w-14 rounded-xl border border-white/20 bg-gradient-to-br ${gradient} p-1 shadow-md`}>
+          {/* Data URI / remote URLs + onError fallback; next/image needs host config */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={logoSrc}
             alt={`${company.company_name} logo`}

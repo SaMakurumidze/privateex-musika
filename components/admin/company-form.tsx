@@ -1,8 +1,6 @@
 "use client"
 
-import React from "react"
-
-import { useState } from "react"
+import React, { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Loader2 } from "lucide-react"
 
@@ -67,7 +65,7 @@ export function CompanyForm({ company }: CompanyFormProps) {
 
       router.push("/admin/dashboard/companies")
       router.refresh()
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       setLoading(false)
     }
@@ -126,8 +124,11 @@ export function CompanyForm({ company }: CompanyFormProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Sector</label>
+            <label htmlFor="company-form-sector" className="block text-sm font-medium text-foreground mb-2">
+              Sector
+            </label>
             <select
+              id="company-form-sector"
               value={formData.sector}
               onChange={(e) => setFormData({ ...formData, sector: e.target.value })}
               className={inputClass}
@@ -144,8 +145,11 @@ export function CompanyForm({ company }: CompanyFormProps) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Funding Round</label>
+            <label htmlFor="company-form-funding-round" className="block text-sm font-medium text-foreground mb-2">
+              Funding Round
+            </label>
             <select
+              id="company-form-funding-round"
               value={formData.funding_round}
               onChange={(e) => setFormData({ ...formData, funding_round: e.target.value })}
               className={inputClass}
@@ -164,8 +168,11 @@ export function CompanyForm({ company }: CompanyFormProps) {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Security Type</label>
+            <label htmlFor="company-form-security-type" className="block text-sm font-medium text-foreground mb-2">
+              Security Type
+            </label>
             <select
+              id="company-form-security-type"
               value={formData.security_type}
               onChange={(e) => setFormData({ ...formData, security_type: e.target.value })}
               className={inputClass}

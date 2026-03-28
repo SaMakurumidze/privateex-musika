@@ -150,7 +150,10 @@ export async function POST(request: NextRequest) {
       )
       RETURNING id
     `
-    const portfolioRow = portfolioRows[0]
+
+    if (!portfolioRows[0]) {
+      return NextResponse.json({ error: "Failed to record purchase" }, { status: 500 })
+    }
 
     // Step 5: Reduce available shares
     await sql`

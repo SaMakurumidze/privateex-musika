@@ -56,7 +56,7 @@ export function InvestorsTable({ investors, permissions }: InvestorsTableProps) 
       }
 
       router.refresh()
-    } catch (err) {
+    } catch {
       setError("An error occurred")
     } finally {
       setLoading(null)

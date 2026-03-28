@@ -79,7 +79,11 @@ export default async function AdminCompaniesPage({
               className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
+          <label htmlFor="admin-companies-status" className="sr-only">
+            Filter companies by approval status
+          </label>
           <select
+            id="admin-companies-status"
             name="status"
             defaultValue={statusFilter}
             className="px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"

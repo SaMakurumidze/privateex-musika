@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Edit, CheckCircle, XCircle, ListPlus, ListMinus, MoreHorizontal } from "lucide-react"
+import { Edit, CheckCircle, XCircle, ListPlus, ListMinus } from "lucide-react"
 import type { Permission } from "@/lib/admin-auth"
 
 export interface Company {
@@ -53,7 +53,7 @@ export function CompaniesTable({ companies, permissions }: CompaniesTableProps) 
       }
 
       router.refresh()
-    } catch (err) {
+    } catch {
       setError("An error occurred")
     } finally {
       setLoading(null)
@@ -111,6 +111,8 @@ export function CompaniesTable({ companies, permissions }: CompaniesTableProps) 
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
                     {company.logo_url ? (
+                      // Arbitrary company logo URLs; next/image requires host allowlists
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={company.logo_url || "/placeholder.svg"}
                         alt={company.company_name}

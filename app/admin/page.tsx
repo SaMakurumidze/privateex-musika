@@ -33,7 +33,7 @@ export default function AdminLoginPage() {
       }
 
       window.location.href = data.redirect
-    } catch (err) {
+    } catch {
       setError("An error occurred. Please try again.")
       setLoading(false)
     }

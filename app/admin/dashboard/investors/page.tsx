@@ -75,7 +75,11 @@ export default async function AdminInvestorsPage({
               className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
+          <label htmlFor="admin-investors-status" className="sr-only">
+            Filter investors by account status
+          </label>
           <select
+            id="admin-investors-status"
             name="status"
             defaultValue={statusFilter}
             className="px-4 py-2 bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"

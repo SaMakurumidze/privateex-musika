@@ -8,15 +8,17 @@ import { CheckCircle, XCircle, Loader2, Mail, ArrowLeft } from "lucide-react"
 export default function VerifyEmailContent() {
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
-  
-  const [status, setStatus] = useState<"loading" | "success" | "error" | "no-token">("loading")
-  const [message, setMessage] = useState("")
+
+  const [status, setStatus] = useState<"loading" | "success" | "error" | "no-token">(() =>
+    token ? "loading" : "no-token",
+  )
+  const [message, setMessage] = useState(() =>
+    token ? "" : "No verification token provided.",
+  )
   const [alreadyVerified, setAlreadyVerified] = useState(false)
 
   useEffect(() => {
     if (!token) {
-      setStatus("no-token")
-      setMessage("No verification token provided.")
       return
     }
 
