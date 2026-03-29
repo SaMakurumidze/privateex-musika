@@ -106,7 +106,9 @@ export async function POST(request: NextRequest) {
 
     // Hash password and generate verification token
     const hashedPassword = await bcrypt.hash(password, 10)
-    const profilePicUrl = profile_picture_url || null
+    // Some existing deployments have stricter NOT NULL constraints on profile/contact columns.
+    // Store empty strings instead of NULL so registration remains backward-compatible.
+    const profilePicUrl = typeof profile_picture_url === "string" ? profile_picture_url.trim() : ""
     const verificationToken = crypto.randomBytes(32).toString("hex")
     const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
 
@@ -129,10 +131,10 @@ export async function POST(request: NextRequest) {
         ${normalizedFullName}, 
         ${email}, 
         ${hashedPassword}, 
-        ${placeholderIdPassport}, 
-        ${null}, 
-        ${null}, 
-        ${null},
+        ${placeholderIdPassport},
+        ${""},
+        ${""},
+        ${""},
         'Angel Investor',
         ${profilePicUrl},
         FALSE,
