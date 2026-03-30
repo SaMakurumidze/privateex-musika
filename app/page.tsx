@@ -293,7 +293,7 @@ export default function HomePage() {
 
           <div className="pt-8 text-sm text-slate-400">
             <p>&copy; 2026 PrivateEx. Global | All rights reserved.</p>
-            <p>Regulated Investment Platform</p>
+            <p>This is an MVP platform for demonstration purposes only.</p>
           </div>
         </div>
 
