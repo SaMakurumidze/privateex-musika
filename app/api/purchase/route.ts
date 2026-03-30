@@ -155,10 +155,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to record purchase" }, { status: 500 })
     }
 
-    // Step 5: Reduce available shares
+    // Step 5: Reduce available shares; auto-delist if exhausted.
     await sql`
       UPDATE companies
-      SET available_shares = available_shares - ${numShares}
+      SET
+        available_shares = GREATEST(available_shares - ${numShares}, 0),
+        listing_status = CASE
+          WHEN available_shares - ${numShares} <= 0 THEN 'delisted'
+          ELSE listing_status
+        END
       WHERE company_id = ${companyId}
     `
 

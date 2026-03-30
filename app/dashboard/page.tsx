@@ -40,7 +40,7 @@ export default async function DashboardPage() {
     WHERE user_id = ${session.id}
   `
 
-  // Get available companies
+  // Only show investable companies on investor dashboard.
   const companies = await sql`
     SELECT 
       id,
@@ -58,8 +58,10 @@ export default async function DashboardPage() {
       company_info_url,
       created_at,
       updated_at
-    FROM companies 
+    FROM companies
     WHERE available_shares > 0
+      AND status = 'approved'
+      AND listing_status = 'listed'
     ORDER BY created_at DESC
   `
 
