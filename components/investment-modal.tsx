@@ -6,6 +6,41 @@ import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { Minus, Plus, Wallet, X, CheckCircle, AlertCircle, Download, Mail, FileText } from "lucide-react"
 
+type CountryOption = {
+  code: string
+  name: string
+  flag: string
+}
+
+function countryCodeToFlag(code: string) {
+  return code
+    .toUpperCase()
+    .replace(/./g, (char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
+}
+
+const COUNTRY_OPTIONS: CountryOption[] = (() => {
+  const displayNames = new Intl.DisplayNames(["en"], { type: "region" })
+  const excludedCodes = new Set(["EU", "UN", "XA", "XB", "ZZ"])
+  const options: CountryOption[] = []
+
+  for (let first = 65; first <= 90; first += 1) {
+    for (let second = 65; second <= 90; second += 1) {
+      const code = String.fromCharCode(first, second)
+      if (excludedCodes.has(code)) continue
+      const name = displayNames.of(code)
+      if (!name || name === code) continue
+      options.push({
+        code,
+        name,
+        flag: countryCodeToFlag(code),
+      })
+    }
+  }
+
+  options.sort((a, b) => a.name.localeCompare(b.name))
+  return options
+})()
+
 interface InvestmentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -485,14 +520,22 @@ export function InvestmentModal({
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="country" className="text-sm font-medium">Country of Origin</label>
-                    <input
+                    <select
                       id="country"
-                      type="text"
                       value={country}
                       onChange={(e) => setCountry(e.target.value)}
                       className={inputClass}
-                      placeholder="Enter country"
-                    />
+                    >
+                      <option value="">Select country</option>
+                      {!COUNTRY_OPTIONS.some((option) => option.name === country) && country.trim().length > 0 && (
+                        <option value={country}>{country}</option>
+                      )}
+                      {COUNTRY_OPTIONS.map((option) => (
+                        <option key={option.code} value={option.name}>
+                          {option.flag} {option.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="address" className="text-sm font-medium">Residential Address</label>

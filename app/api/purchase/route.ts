@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid purchase data" }, { status: 400 })
     }
 
-    const normalizedIdPassport = typeof idPassport === "string" ? idPassport.trim() : ""
+    const normalizedIdPassportInput = typeof idPassport === "string" ? idPassport.trim() : ""
+    const normalizedIdPassport = normalizedIdPassportInput.toUpperCase()
     const normalizedPhone = typeof phone === "string" ? phone.trim() : ""
     const normalizedCountry = typeof country === "string" ? country.trim() : ""
     const normalizedAddress = typeof address === "string" ? address.trim() : ""
@@ -121,7 +122,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Not enough shares available" }, { status: 400 })
     }
 
-    // Step 2.5: Persist KYC profile details collected in checkout flow.
+    // Step 2.5: Prevent two different investor accounts from sharing one ID/Passport.
+    const duplicateIdRows = await sql`
+      SELECT id
+      FROM investors
+      WHERE id <> ${session.id}
+        AND UPPER(TRIM(id_passport)) = ${normalizedIdPassport}
+      LIMIT 1
+    `
+    if (duplicateIdRows.length > 0) {
+      return NextResponse.json(
+        { error: "This National ID/Passport number is already linked to another account." },
+        { status: 409 },
+      )
+    }
+
+    // Persist KYC profile details collected in checkout flow.
     await sql`
       UPDATE investors
       SET
@@ -244,6 +260,14 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
+    const dbError = error as { code?: string; constraint?: string }
+    if (dbError.code === "23505" && dbError.constraint?.includes("id_passport")) {
+      return NextResponse.json(
+        { error: "This National ID/Passport number is already linked to another account." },
+        { status: 409 },
+      )
+    }
+
     console.error("Purchase error:", error)
     const errorMessage =
       error instanceof Error ? error.message : "An error occurred during purchase"
