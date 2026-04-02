@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 import { Building2, Briefcase, History, Shield, LogOut, Settings, HelpCircle, Mail, Menu, X } from "lucide-react"
 import type { Investor } from "@/lib/auth"
 import { InactivityLogout } from "@/components/inactivity-logout"
+import { ActivityTracker } from "@/components/activity-tracker"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
 
@@ -58,6 +59,7 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
       className="min-h-screen bg-gradient-to-br from-background via-indigo-50/50 to-purple-50/60 dark:from-background dark:via-card dark:to-muted"
     >
       <InactivityLogout logoutEndpoint="/api/auth/logout" redirectTo="/" />
+      <ActivityTracker scope="investor" />
 
       {/* Topbar */}
       <header className="fixed top-0 left-0 right-0 h-20 bg-background/80 backdrop-blur-xl border-b border-border z-50">

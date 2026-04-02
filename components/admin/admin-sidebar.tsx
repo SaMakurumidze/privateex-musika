@@ -12,6 +12,7 @@ import {
   Wallet,
   BarChart3,
   History,
+  ClipboardList,
   FileText,
   Mail,
   LogOut,
@@ -79,6 +80,12 @@ const navItems = [
     href: "/admin/dashboard/messages",
     icon: Mail,
     permission: "investors:view" as Permission,
+  },
+  {
+    label: "Audit Logs",
+    href: "/admin/dashboard/audit-logs",
+    icon: ClipboardList,
+    permission: "analytics:view" as Permission,
   },
   {
     label: "Accounting",

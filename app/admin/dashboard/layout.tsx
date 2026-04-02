@@ -4,6 +4,7 @@ import { getAdminSession, getPermissions } from "@/lib/admin-auth"
 import { AdminSidebar } from "@/components/admin/admin-sidebar"
 import { InactivityLogout } from "@/components/inactivity-logout"
 import { AdminThemeSync } from "@/components/admin/admin-theme-sync"
+import { ActivityTracker } from "@/components/activity-tracker"
 
 export default async function AdminDashboardLayout({
   children,
@@ -22,6 +23,7 @@ export default async function AdminDashboardLayout({
     <div data-admin-shell="true" className="min-h-screen bg-background">
       <AdminThemeSync />
       <InactivityLogout logoutEndpoint="/api/admin/auth/logout" redirectTo="/admin" />
+      <ActivityTracker scope="admin" />
       <AdminSidebar
         admin={{
           name: admin.name,
