@@ -69,6 +69,7 @@ export function InvestmentModal({
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [certificateNumber, setCertificateNumber] = useState<string | null>(null)
+  const [transactionComplete, setTransactionComplete] = useState(false)
   const [isEmailing, setIsEmailing] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [step, setStep] = useState<"select" | "details" | "summary">("select")
@@ -164,6 +165,7 @@ export function InvestmentModal({
       setSuccess("")
       setShares(1)
       setCertificateNumber(null)
+      setTransactionComplete(false)
       setIsEmailing(false)
       setEmailSent(false)
       setStep("select")
@@ -212,6 +214,7 @@ export function InvestmentModal({
     setError("")
 
     try {
+      setEmailSent(false)
       const response = await fetch("/api/purchase", {
         method: "POST",
         headers: {
@@ -231,9 +234,22 @@ export function InvestmentModal({
       const data = await response.json()
 
       if (response.ok) {
-        setSuccess(`Investment successful! Transaction ID: ${data.transactionId}`)
-        setCertificateNumber(data.certificateNumber || null)
-        setWalletBalance(data.newBalance)
+        const isCompleted = data.status === "completed" || Boolean(data.certificateNumber)
+        if (!isCompleted && data.investmentRequestId) {
+          setSuccess(
+            data.message ||
+              "Your investment request has been sent to Ability for authorization.",
+          )
+          setTransactionComplete(false)
+          setCertificateNumber(null)
+        } else {
+          setSuccess(`Transaction complete. Transaction ID: ${data.transactionId}`)
+          setTransactionComplete(true)
+          setCertificateNumber(data.certificateNumber || null)
+          if (typeof data.newBalance === "number") {
+            setWalletBalance(data.newBalance)
+          }
+        }
       } else {
         setError(data.error || "Purchase failed")
       }
@@ -275,6 +291,7 @@ export function InvestmentModal({
     setError("")
     setSuccess("")
     setCertificateNumber(null)
+    setTransactionComplete(false)
     setIsEmailing(false)
     setEmailSent(false)
     setStep("select")
@@ -337,15 +354,20 @@ export function InvestmentModal({
               <div className="text-center py-4">
                 <CheckCircle className="h-14 w-14 text-green-500 mx-auto mb-3" />
                 <p className="text-lg font-semibold text-green-500">{success}</p>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {transactionComplete ? "Transaction Status: Complete" : "Transaction Status: Pending Authorization"}
+                </p>
               </div>
 
-              {certificateNumber && (
+              {transactionComplete && (
                 <div className="p-5 rounded-xl bg-primary/5 border border-primary/20 space-y-4">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-primary shrink-0" />
                     <div>
                       <p className="text-sm font-semibold text-foreground">Share Certificate Issued</p>
-                      <p className="text-xs text-muted-foreground">{certificateNumber}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {certificateNumber || "Certificate number is being prepared."}
+                      </p>
                     </div>
                   </div>
 
@@ -353,6 +375,7 @@ export function InvestmentModal({
                     <button
                       type="button"
                       onClick={handleDownloadCertificate}
+                      disabled={!certificateNumber}
                       className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 sm:text-base"
                     >
                       <Download className="h-4 w-4 shrink-0" />
@@ -361,7 +384,7 @@ export function InvestmentModal({
                     <button
                       type="button"
                       onClick={handleEmailCertificate}
-                      disabled={isEmailing || emailSent}
+                      disabled={!certificateNumber || isEmailing || emailSent}
                       className="flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50 sm:text-base"
                     >
                       <Mail className="h-4 w-4 shrink-0" />

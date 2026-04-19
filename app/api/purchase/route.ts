@@ -7,6 +7,12 @@ import { assertCompanyId, assertPositiveNumber } from "@/lib/input-safety"
 const SERVICE_FEE_RATE = 0.015
 const TAX_RATE = 0.02
 
+function isAbilityIntegrationConfigured(): boolean {
+  const baseUrl = process.env.ABILITY_API_BASE_URL?.trim()
+  const apiKey = (process.env.PRIVATEEX_API_KEY || process.env.ABILITY_API_KEY)?.trim()
+  return Boolean(baseUrl && apiKey)
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getSession()
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
     const totalAmount = subtotal + serviceFee + tax
 
     const sql = createSQLClient()
-    await ensureInvestmentRequestsTable(sql)
+    const abilityEnabled = isAbilityIntegrationConfigured()
 
     // Step 2: Check company shares
     const companyRows = await sql`
@@ -108,6 +114,138 @@ export async function POST(request: NextRequest) {
         address = ${normalizedAddress}
       WHERE id = ${session.id}
     `
+
+    // Simulated wallet: complete purchase immediately when Ability is not configured.
+    if (!abilityEnabled) {
+      await ensurePurchaseChargeAuditTable(sql)
+
+      const transactionId = `TXN-${session.id}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      const certNumber = `CERT-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`
+
+      const walletRows = await sql`
+        SELECT balance FROM wallets WHERE investor_id = ${session.id}
+      `
+      const wallet = walletRows[0]
+
+      if (!wallet) {
+        return NextResponse.json({ error: "Wallet not found. Please contact support." }, { status: 400 })
+      }
+
+      const currentBalance = Number.parseFloat(String(wallet.balance))
+      if (currentBalance < totalAmount) {
+        return NextResponse.json({
+          error: `Insufficient wallet balance. You have $${currentBalance.toFixed(2)} but need $${totalAmount.toFixed(2)}.`,
+        }, { status: 400 })
+      }
+
+      await sql`
+        UPDATE wallets
+        SET balance = balance - ${totalAmount}, updated_at = NOW()
+        WHERE investor_id = ${session.id}
+      `
+
+      const portfolioRows = await sql`
+        INSERT INTO portfolio (
+          user_id, transaction_id, company_name, company_id,
+          shares_purchased, price_per_share, payment_method, status
+        ) VALUES (
+          ${session.id}, ${transactionId}, ${company.company_name}, ${companyId},
+          ${numShares}, ${numPrice}, 'Wallet', 'completed'
+        )
+        RETURNING id
+      `
+
+      if (!portfolioRows[0]) {
+        return NextResponse.json({ error: "Failed to record purchase" }, { status: 500 })
+      }
+
+      await sql`
+        UPDATE companies
+        SET
+          available_shares = GREATEST(available_shares - ${numShares}, 0),
+          listing_status = CASE
+            WHEN available_shares - ${numShares} <= 0 THEN 'delisted'
+            ELSE listing_status
+          END
+        WHERE company_id = ${companyId}
+      `
+
+      const investorRows = await sql`
+        SELECT full_name, email, id_passport FROM investors WHERE id = ${session.id}
+      `
+      const investor = investorRows[0]
+
+      await sql`
+        INSERT INTO certificates (
+          certificate_number, transaction_id,
+          investor_id, shareholder_name, shareholder_id_passport,
+          company_id, company_name, company_registration_number, country_of_incorporation,
+          share_class, shares_issued, price_per_share, total_amount
+        ) VALUES (
+          ${certNumber}, ${transactionId},
+          ${session.id}, ${investor?.full_name || "Investor"}, ${normalizedIdPassport},
+          ${companyId}, ${company.company_name}, ${company.registration_number || ''}, ${company.country_of_incorporation || ''},
+          ${company.security_type || company.share_class || "Ordinary"}, ${numShares}, ${numPrice}, ${totalAmount}
+        )
+      `
+
+      await sql`
+        INSERT INTO purchase_charge_audit (
+          transaction_id,
+          investor_id,
+          investor_name,
+          investor_email,
+          company_id,
+          company_name,
+          shares_purchased,
+          price_per_share,
+          subtotal,
+          service_fee,
+          tax,
+          total_amount,
+          payment_method
+        ) VALUES (
+          ${transactionId},
+          ${session.id},
+          ${investor?.full_name || "Investor"},
+          ${investor?.email || null},
+          ${companyId},
+          ${company.company_name},
+          ${numShares},
+          ${numPrice},
+          ${subtotal},
+          ${serviceFee},
+          ${tax},
+          ${totalAmount},
+          'Wallet'
+        )
+        ON CONFLICT (transaction_id) DO NOTHING
+      `
+
+      const updatedWalletRows = await sql`
+        SELECT balance FROM wallets WHERE investor_id = ${session.id}
+      `
+      const updatedWallet = updatedWalletRows[0]
+
+      return NextResponse.json({
+        success: true,
+        status: "completed",
+        transactionId,
+        certificateNumber: certNumber,
+        message: "Purchase completed successfully. Your share certificate has been issued.",
+        newBalance: Number.parseFloat(String(updatedWallet?.balance || "0")),
+        investorName: investor?.full_name || "Investor",
+        investorEmail: investor?.email || "",
+        pricing: {
+          subtotal,
+          serviceFee,
+          tax,
+          totalAmount,
+        },
+      })
+    }
+
+    await ensureInvestmentRequestsTable(sql)
 
     // Identity synchronization requirement:
     // company_id must match the identifier Ability knows for this company.
@@ -167,6 +305,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      status: "pending_authorization",
       investmentRequestId,
       abilityReferenceId: abilityRequest.ability_reference_id,
       message: "Your investment request has been sent to Ability for authorization.",
